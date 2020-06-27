@@ -1,0 +1,11 @@
+cflags = -fno-builtin -fno-stack-protector -nostdinc -Wall -Wextra -I include
+lflags = -s -nostdlib -e UefiMain --subsystem 10
+
+rule cc
+  command = x86_64-w64-mingw32-gcc -c $cflags $in -o $out
+
+rule ld
+  command = x86_64-w64-mingw32-ld $in $lflags -o $out
+
+build obj/bootx64.o: cc src/bootx64.c
+build bin/bootx64.efi: ld obj/bootx64.o
