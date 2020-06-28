@@ -8,4 +8,5 @@ rule ld
   command = x86_64-w64-mingw32-ld $in $lflags -o $out
 
 build obj/bootx64.o: cc src/bootx64.c
-build bin/bootx64.efi: ld obj/bootx64.o
+build obj/eficio.o: cc src/eficio.c
+build bin/bootx64.efi: ld obj/bootx64.o obj/eficio.o
