@@ -25,3 +25,21 @@ EFI_STATUS UefiScanSecretText(OUT CHAR16* StringBuffer, IN UINTN StringLength) {
 	StringBuffer[i] = L'\0';
 	return EFI_SUCCESS;
 }
+
+EFI_STATUS UefiScanPublicText(OUT CHAR16* StringBuffer, IN UINTN StringLength) {
+	EFI_STATUS Status;
+	EFI_INPUT_KEY PushedKey;
+	CHAR16 KeyOutputBuffer[2];
+	UINTN i;
+	for (i = 0; i < StringLength; i++) {
+		do {
+			Status = gST->ConIn->ReadKeyStroke(gST->ConIn, &PushedKey);
+		} while (Status == EFI_NOT_READY);
+		KeyOutputBuffer[0] = PushedKey.UnicodeChar;
+		KeyOutputBuffer[1] = L'\0';
+		StringBuffer[i] = PushedKey.UnicodeChar;
+		gST->ConOut->OutputString(gST->ConOut, KeyOutputBuffer);
+	}
+	StringBuffer[i] = L'\0';
+	return EFI_SUCCESS;
+}

@@ -8,6 +8,7 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 	EFI_STATUS Status;
 	EFI_INPUT_KEY ShutdownKey;
 	CHAR16 SecretText[64];
+	CHAR16 PublicText[64];
 	gST = SystemTable;
 	gBS = SystemTable->BootServices;
 	gRT = SystemTable->RuntimeServices;
@@ -18,8 +19,11 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 	UefiScanSecretText(SecretText, 8);
 	gST->ConOut->OutputString(gST->ConOut, L"\n[SECRET] ");
 	gST->ConOut->OutputString(gST->ConOut, SecretText);
-	gST->ConOut->OutputString(gST->ConOut, L"\n");
-	gST->ConOut->OutputString(gST->ConOut, L"Press keyboard to return.\n");
+	gST->ConOut->OutputString(gST->ConOut, L"\nPUBLIC> ");
+	UefiScanPublicText(PublicText, 8);
+	gST->ConOut->OutputString(gST->ConOut, L"\n[PUBLIC] ");
+	gST->ConOut->OutputString(gST->ConOut, PublicText);
+	gST->ConOut->OutputString(gST->ConOut, L"\nPress keyboard to return.\n");
 	do {
 		Status = gST->ConIn->ReadKeyStroke(gST->ConIn, &ShutdownKey);
 	} while (Status == EFI_NOT_READY);
