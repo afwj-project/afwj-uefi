@@ -12,11 +12,11 @@ EFI_STATUS UefiInitializeConsole() {
 	return EFI_SUCCESS;
 }
 
-EFI_STATUS UefiScanSecretText(OUT CHAR16* StringBuffer, IN UINTN StringCount) {
+EFI_STATUS UefiScanSecretText(OUT CHAR16* StringBuffer, IN UINTN StringLength) {
 	EFI_STATUS Status;
 	EFI_INPUT_KEY PushedKey;
 	UINTN i;
-	for (i = 0; i < StringCount; i++) {
+	for (i = 0; i < StringLength; i++) {
 		do {
 			Status = gST->ConIn->ReadKeyStroke(gST->ConIn, &PushedKey);
 		} while (Status == EFI_NOT_READY);
