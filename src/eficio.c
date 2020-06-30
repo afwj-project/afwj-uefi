@@ -1,6 +1,7 @@
 #include "eficio.h"
 
 CHAR16 OutputBuffer[1024];
+UINTN OutputLength;
 
 EFI_STATUS UefiInitializeConsole() {
 	EFI_STATUS Status;
@@ -9,6 +10,7 @@ EFI_STATUS UefiInitializeConsole() {
 	Status = gST->ConIn->Reset(gST->ConIn, FALSE);
 	if (Status != EFI_SUCCESS) return Status;
 	for (UINTN i = 0; i < 1024; i++) OutputBuffer[i] = L'\0';
+	OutputLength = 0;
 	return EFI_SUCCESS;
 }
 

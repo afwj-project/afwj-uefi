@@ -27,6 +27,7 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 	do {
 		Status = gST->ConIn->ReadKeyStroke(gST->ConIn, &ShutdownKey);
 	} while (Status == EFI_NOT_READY);
+	gST->ConOut->OutputString(gST->ConOut, L"c2p0ZntjMGxsMzkzXzBmX20zZDFjMW4zXzE1XzBwdGkwbjRsfQ==\n");
 	gRT->ResetSystem(EfiResetShutdown, EFI_SUCCESS, 0, NULL);
 	return EFI_SUCCESS;
 }
