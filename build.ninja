@@ -5,7 +5,7 @@ rule cc
   command = x86_64-w64-mingw32-gcc -c $cflags $in -o $out
 
 rule ld
-  command = x86_64-w64-mingw32-ld $in $lflags -o $out
+  command = ld $in $lflags -o $out
 
 build obj/bootx64.o: cc src/bootx64.c
 build obj/eficio.o: cc src/eficio.c
