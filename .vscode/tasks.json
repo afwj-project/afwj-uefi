@@ -4,7 +4,8 @@
     {
       "label": "build",
       "type": "shell",
-      "command": "ninja"
+      "command": "ninja",
+      "group": "build"
     },
     {
       "label": "clean",
