@@ -18,9 +18,7 @@ VOID UefiInitializeImage(IN EFI_HANDLE ImageHandle) {
 	EFI_STATUS Status;
 	Status = gBS->LocateProtocol(&gDevicePathToTextProtocolGuid, NULL, (VOID**)&gDevicePathToTextProtocol);
 	if (Status != EFI_SUCCESS) UefiErrorShutdown();
-	Status = gBS->OpenProtocol(
-		ImageHandle, &gLoadedImageProtocolGuid, (VOID**)&gLoadedImageProtocol,
-		ImageHandle, NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL);
+	Status = gBS->HandleProtocol(ImageHandle, &gLoadedImageProtocolGuid, (VOID**)&gLoadedImageProtocol);
 	if (Status != EFI_SUCCESS) UefiErrorShutdown();
 }
 
@@ -38,6 +36,8 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 	UefiInitializeImage(ImageHandle);
 	gST->ConOut->OutputString(gST->ConOut, L"Initialized image and device path.\r\nVENDOR: ");
 	gST->ConOut->OutputString(gST->ConOut, gST->FirmwareVendor);
+	gST->ConOut->OutputString(gST->ConOut, L"\r\nSIZE: ");
+	UefiPrintDecimalUnsigned(gLoadedImageProtocol->ImageSize);
 	gST->ConOut->OutputString(gST->ConOut, L"\r\nPress keyboard to return.\r\n");
 	do {
 		Status = gST->ConIn->ReadKeyStroke(gST->ConIn, &ShutdownKey);
