@@ -56,6 +56,26 @@ EFI_STATUS UefiPrintDecimalUnsigned(IN UINT64 NumberData) {
 	return EFI_SUCCESS;
 }
 
+EFI_STATUS UefiPrintMemoryAddress(IN UINTN MemoryAddress) {
+	UINTN RemainderData;
+	CHAR16 TempCharacter;
+	for (UINTN i = 0; i < 16; i++) {
+		RemainderData = MemoryAddress % 16;
+		if (RemainderData < 10) OutputBuffer[OutputLength++] = L'0' + RemainderData;
+		else OutputBuffer[OutputLength++] = L'7' + RemainderData;
+		MemoryAddress /= 16;
+	}
+	UINTN LastIndex = OutputLength - 1;
+	for (UINTN i = 0; i < OutputLength / 2; i++) {
+		TempCharacter = OutputBuffer[i];
+		OutputBuffer[i] = OutputBuffer[LastIndex - i];
+		OutputBuffer[LastIndex - i] = TempCharacter;
+	}
+	gST->ConOut->OutputString(gST->ConOut, OutputBuffer);
+	UefiFlushOutputBuffer();
+	return EFI_SUCCESS;
+}
+
 EFI_STATUS UefiScanSecretText(OUT CHAR16* StringBuffer, IN UINTN StringLength) {
 	EFI_STATUS Status;
 	EFI_INPUT_KEY PushedKey;

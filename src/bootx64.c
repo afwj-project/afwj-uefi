@@ -5,7 +5,7 @@ EFI_BOOT_SERVICES* BS;
 EFI_RUNTIME_SERVICES* RT;
 
 EFI_GUID LoadedImageProtocolGuid = EFI_LOADED_IMAGE_PROTOCOL_GUID;
-EFI_GUID DevicePathToTextProtocolGuid = EFI_LOADED_IMAGE_DEVICE_PATH_PROTOCOL_GUID;
+EFI_GUID DevicePathToTextProtocolGuid = EFI_DEVICE_PATH_TO_TEXT_PROTOCOL_GUID;
 
 EFI_LOADED_IMAGE_PROTOCOL* LoadedImageProtocol;
 EFI_DEVICE_PATH_TO_TEXT_PROTOCOL* DevicePathToTextProtocol;
@@ -36,8 +36,14 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 	UefiInitializeImage(ImageHandle);
 	gST->ConOut->OutputString(gST->ConOut, L"Initialized image and device path.\r\nVENDOR: ");
 	gST->ConOut->OutputString(gST->ConOut, gST->FirmwareVendor);
+	gST->ConOut->OutputString(gST->ConOut, L"\r\nBASE: ");
+	UefiPrintMemoryAddress((UINTN)gLoadedImageProtocol->ImageBase);
 	gST->ConOut->OutputString(gST->ConOut, L"\r\nSIZE: ");
 	UefiPrintDecimalUnsigned(gLoadedImageProtocol->ImageSize);
+	gST->ConOut->OutputString(gST->ConOut, L"\r\nPATH: ");
+	gST->ConOut->OutputString(
+		gST->ConOut, gDevicePathToTextProtocol->ConvertDevicePathToText(
+			gLoadedImageProtocol->FilePath, FALSE, FALSE));
 	gST->ConOut->OutputString(gST->ConOut, L"\r\nPress keyboard to return.\r\n");
 	do {
 		Status = gST->ConIn->ReadKeyStroke(gST->ConIn, &ShutdownKey);
