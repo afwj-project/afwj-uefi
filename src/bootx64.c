@@ -6,9 +6,11 @@ EFI_RUNTIME_SERVICES* RT;
 
 EFI_GUID LoadedImageProtocolGuid = EFI_LOADED_IMAGE_PROTOCOL_GUID;
 EFI_GUID DevicePathToTextProtocolGuid = EFI_DEVICE_PATH_TO_TEXT_PROTOCOL_GUID;
+EFI_GUID DevicePathFromTextProtocolGuid = EFI_DEVICE_PATH_FROM_TEXT_PROTOCOL_GUID;
 
 EFI_LOADED_IMAGE_PROTOCOL* LoadedImageProtocol;
 EFI_DEVICE_PATH_TO_TEXT_PROTOCOL* DevicePathToTextProtocol;
+EFI_DEVICE_PATH_FROM_TEXT_PROTOCOL* DevicePathFromTextProtocol;
 
 VOID UefiErrorShutdown() {
 	gRT->ResetSystem(EfiResetShutdown, EFI_SUCCESS, 0, NULL);
@@ -17,6 +19,8 @@ VOID UefiErrorShutdown() {
 VOID UefiInitializeImage(IN EFI_HANDLE ImageHandle) {
 	EFI_STATUS Status;
 	Status = gBS->LocateProtocol(&gDevicePathToTextProtocolGuid, NULL, (VOID**)&gDevicePathToTextProtocol);
+	if (Status != EFI_SUCCESS) UefiErrorShutdown();
+	Status = gBS->LocateProtocol(&gDevicePathFromTextProtocolGuid, NULL, (VOID**)&gDevicePathFromTextProtocol);
 	if (Status != EFI_SUCCESS) UefiErrorShutdown();
 	Status = gBS->HandleProtocol(ImageHandle, &gLoadedImageProtocolGuid, (VOID**)&gLoadedImageProtocol);
 	if (Status != EFI_SUCCESS) UefiErrorShutdown();

@@ -13,8 +13,12 @@ extern EFI_GUID LoadedImageProtocolGuid;
 #define gLoadedImageProtocolGuid LoadedImageProtocolGuid
 extern EFI_GUID DevicePathToTextProtocolGuid;
 #define gDevicePathToTextProtocolGuid DevicePathToTextProtocolGuid
+extern EFI_GUID DevicePathFromTextProtocolGuid;
+#define gDevicePathFromTextProtocolGuid DevicePathFromTextProtocolGuid
 
 extern EFI_LOADED_IMAGE_PROTOCOL* LoadedImageProtocol;
 #define gLoadedImageProtocol LoadedImageProtocol
 extern EFI_DEVICE_PATH_TO_TEXT_PROTOCOL* DevicePathToTextProtocol;
 #define gDevicePathToTextProtocol DevicePathToTextProtocol
+extern EFI_DEVICE_PATH_FROM_TEXT_PROTOCOL* DevicePathFromTextProtocol;
+#define gDevicePathFromTextProtocol DevicePathFromTextProtocol
