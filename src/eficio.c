@@ -3,20 +3,18 @@
 CHAR16 OutputBuffer[1024];
 UINTN OutputLength;
 
-EFI_STATUS UefiFlushOutputBuffer() {
+VOID UefiFlushOutputBuffer() {
 	for (UINTN i = 0; i < 1024; i++) OutputBuffer[i] = L'\0';
 	OutputLength = 0;
-	return EFI_SUCCESS;
 }
 
-EFI_STATUS UefiInitializeConsole() {
+VOID UefiInitializeConsole() {
 	EFI_STATUS Status;
 	Status = gST->ConOut->Reset(gST->ConOut, FALSE);
-	if (Status != EFI_SUCCESS) return Status;
+	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status);
 	Status = gST->ConIn->Reset(gST->ConIn, FALSE);
-	if (Status != EFI_SUCCESS) return Status;
+	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status);
 	UefiFlushOutputBuffer();
-	return EFI_SUCCESS;
 }
 
 EFI_STATUS UefiPrintDecimalInteger(IN INT64 NumberData) {
@@ -44,6 +42,26 @@ EFI_STATUS UefiPrintDecimalUnsigned(IN UINT64 NumberData) {
 	do {
 		OutputBuffer[OutputLength++] = L'0' + NumberData % 10;
 		NumberData /= 10;
+	} while (NumberData);
+	UINTN LastIndex = OutputLength - 1;
+	for (UINTN i = 0; i < OutputLength / 2; i++) {
+		TempCharacter = OutputBuffer[i];
+		OutputBuffer[i] = OutputBuffer[LastIndex - i];
+		OutputBuffer[LastIndex - i] = TempCharacter;
+	}
+	gST->ConOut->OutputString(gST->ConOut, OutputBuffer);
+	UefiFlushOutputBuffer();
+	return EFI_SUCCESS;
+}
+
+EFI_STATUS UefiPrintHexadecimalUnsigned(IN UINT64 NumberData) {
+	UINTN RemainderData;
+	CHAR16 TempCharacter;
+	do {
+		RemainderData = NumberData % 16;
+		if (RemainderData < 10) OutputBuffer[OutputLength++] = L'0' + RemainderData;
+		else OutputBuffer[OutputLength++] = L'7' + RemainderData;
+		NumberData /= 16;
 	} while (NumberData);
 	UINTN LastIndex = OutputLength - 1;
 	for (UINTN i = 0; i < OutputLength / 2; i++) {

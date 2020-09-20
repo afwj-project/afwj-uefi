@@ -9,4 +9,5 @@ rule ld
 
 build obj/bootx64.o: cc src/bootx64.c
 build obj/eficio.o: cc src/eficio.c
-build bin/bootx64.efi: ld obj/bootx64.o obj/eficio.o
+build obj/efierr.o: cc src/efierr.c
+build bin/bootx64.efi: ld obj/bootx64.o obj/eficio.o obj/efierr.o
