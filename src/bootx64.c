@@ -1,5 +1,7 @@
 #include "eficio.h"
 
+#define SYSTEM_CHECK_LOCATION L"\\EFI\\AFWJOS\\SCHECK.EFI"
+
 EFI_SYSTEM_TABLE* ST;
 EFI_BOOT_SERVICES* BS;
 EFI_RUNTIME_SERVICES* RT;
@@ -26,6 +28,7 @@ VOID UefiInitializeImage(IN EFI_HANDLE ImageHandle) {
 EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable) {
 	EFI_STATUS Status;
 	EFI_INPUT_KEY ShutdownKey;
+	EFI_DEVICE_PATH_PROTOCOL* SystemCheckPath;
 	gST = SystemTable;
 	gBS = SystemTable->BootServices;
 	gRT = SystemTable->RuntimeServices;
@@ -44,6 +47,7 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 	gST->ConOut->OutputString(
 		gST->ConOut, gDevicePathToTextProtocol->ConvertDevicePathToText(
 			ProtocolFromBootImage->FilePath, FALSE, FALSE));
+	SystemCheckPath = gDevicePathFromTextProtocol->ConvertTextToDevicePath(SYSTEM_CHECK_LOCATION);
 	gST->ConOut->OutputString(gST->ConOut, L"\r\nPress keyboard to return.\r\n");
 	do {
 		Status = gST->ConIn->ReadKeyStroke(gST->ConIn, &ShutdownKey);
