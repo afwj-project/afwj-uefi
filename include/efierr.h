@@ -2,4 +2,4 @@
 
 #include "efigvars.h"
 
-VOID UefiErrorShutdown(EFI_STATUS ErrorCode);
+VOID UefiErrorShutdown(EFI_STATUS ErrorCode, CHAR16* ErrorSymbol);

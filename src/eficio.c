@@ -11,9 +11,9 @@ VOID UefiFlushOutputBuffer() {
 VOID UefiInitializeConsole() {
 	EFI_STATUS Status;
 	Status = gST->ConOut->Reset(gST->ConOut, FALSE);
-	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status);
+	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status, L"ConOutReset WW92chBGtZKQ");
 	Status = gST->ConIn->Reset(gST->ConIn, FALSE);
-	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status);
+	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status, L"ConInReset ksThRY1Ii2d3");
 	UefiFlushOutputBuffer();
 }
 

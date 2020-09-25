@@ -1,10 +1,12 @@
 #include "eficio.h"
 
-VOID UefiErrorShutdown(EFI_STATUS ErrorCode) {
+VOID UefiErrorShutdown(EFI_STATUS ErrorCode, CHAR16* ErrorSymbol) {
 	EFI_STATUS Status;
 	EFI_INPUT_KEY ShutdownKey;
-	gST->ConOut->OutputString(gST->ConOut, L"Error occurred!\r\nCODE: ");
+	gST->ConOut->OutputString(gST->ConOut, L"Error occurred!\r\nSTATUS: ");
 	UefiPrintHexadecimalUnsigned(ErrorCode);
+	gST->ConOut->OutputString(gST->ConOut, L"\r\nSYMBOL: ");
+	gST->ConOut->OutputString(gST->ConOut, ErrorSymbol);
 	gST->ConOut->OutputString(gST->ConOut, L"\r\nPress keyboard to return.\r\n");
 	do {
 		Status = gST->ConIn->ReadKeyStroke(gST->ConIn, &ShutdownKey);
