@@ -1,4 +1,5 @@
 #include "eficio.h"
+#include "kbinfm.h"
 
 #define SYSTEM_CHECK_LOCATION { L"efi", L"afwjos", L"scheck.efi" }
 
@@ -48,6 +49,7 @@ VOID UefiLoadSystemCheck(IN EFI_HANDLE ImageHandle) {
 EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable) {
 	EFI_STATUS Status;
 	EFI_INPUT_KEY ShutdownKey;
+	KERNEL_BINARY_SECTION_INFO* SectionInfo;
 	gST = SystemTable;
 	gBS = SystemTable->BootServices;
 	gRT = SystemTable->RuntimeServices;
@@ -70,6 +72,10 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 	UefiLoadSystemCheck(ImageHandle);
 	gST->ConOut->OutputString(gST->ConOut, L"PROFIT!\r\nRunning system check application...\r\n");
 	gBS->StartImage(SystemCheckImage, NULL, NULL);
+	Status = gBS->AllocatePool(EfiLoaderData, sizeof(KERNEL_BINARY_SECTION_INFO) * 16, (VOID**)&SectionInfo);
+	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status, L"AllocatePool qkMTHm0FNbCw");
+	Status = gBS->FreePool((VOID*)SectionInfo);
+	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status, L"FreePool 7cUFwavcRAoo");
 	gST->ConOut->OutputString(gST->ConOut, L"Press keyboard to return.\r\n");
 	do {
 		Status = gST->ConIn->ReadKeyStroke(gST->ConIn, &ShutdownKey);
