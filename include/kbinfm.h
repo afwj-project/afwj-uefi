@@ -13,7 +13,7 @@
 #define KERNEL_BINARY_RELOC 0xC9E5
 
 #pragma pack(push, 1)
-typedef struct _KERNEL_BINARY_SECTION_INFO {
+typedef struct {
 	UINT16 SectionCode;
 	UINT64 SectionSize;
 } KERNEL_BINARY_SECTION_INFO;

@@ -32,30 +32,30 @@ typedef UINT64 EFI_VIRTUAL_ADDRESS;
 #define MAX_BIT 0x8000000000000000
 
 
-typedef enum _EFI_LOCATE_SEARCH_TYPE {
+typedef enum {
 	AllHandles,
 	ByRegisterNotify,
 	ByProtocol
 } EFI_LOCATE_SEARCH_TYPE;
 
-typedef enum _EFI_TIMER_DELAY {
+typedef enum {
 	TimerCancel,
 	TimerPeriodic,
 	TimerRelative
 } EFI_TIMER_DELAY;
 
-typedef enum _EFI_ALLOCATE_TYPE {
+typedef enum {
 	AllocateAnyPages,
 	AllocateMaxAddress,
 	AllocateAddress,
 	MaxAllocateType
 } EFI_ALLOCATE_TYPE;
 
-typedef enum _EFI_INTERFACE_TYPE {
+typedef enum {
 	EFI_NATIVE_INTERFACE
 } EFI_INTERFACE_TYPE;
 
-typedef enum _EFI_MEMORY_TYPE {
+typedef enum {
 	EfiReservedMemoryType,
 	EfiLoaderCode,
 	EfiLoaderData,
@@ -74,14 +74,14 @@ typedef enum _EFI_MEMORY_TYPE {
 	EfiMaxMemoryType
 } EFI_MEMORY_TYPE;
 
-typedef enum _EFI_RESET_TYPE {
+typedef enum {
 	EfiResetCold,
 	EfiResetWarm,
 	EfiResetShutdown,
 	EfiResetPlatformSpecific
 } EFI_RESET_TYPE;
 
-typedef enum _EFI_PARITY_TYPE {
+typedef enum {
 	DefaultParity,
 	NoParity,
 	EvenParity,
@@ -90,33 +90,33 @@ typedef enum _EFI_PARITY_TYPE {
 	SpaceParity
 } EFI_PARITY_TYPE;
 
-typedef enum _EFI_STOP_BITS_TYPE {
+typedef enum {
 	DefaultStopBits,
 	OneStopBit,
 	OneFiveStopBits,
 	TwoStopBits
 } EFI_STOP_BITS_TYPE;
 
-typedef struct _EFI_GUID {
+typedef struct {
 	UINT32 Data1;
 	UINT16 Data2;
 	UINT16 Data3;
 	UINT8 Data4[8];
 } EFI_GUID;
 
-typedef struct _EFI_MAC_ADDRESS {
+typedef struct {
 	UINT8 Addr[32];
 } EFI_MAC_ADDRESS;
 
-typedef struct _EFI_IPv4_ADDRESS {
+typedef struct {
 	UINT8 Addr[4];
 } EFI_IPv4_ADDRESS;
 
-typedef struct _EFI_IPv6_ADDRESS {
+typedef struct {
 	UINT8 Addr[16];
 } EFI_IPv6_ADDRESS;
 
-typedef struct _EFI_TIME {
+typedef struct {
 	UINT16 Year;
 	UINT8 Month;
 	UINT8 Day;
@@ -130,13 +130,13 @@ typedef struct _EFI_TIME {
 	UINT8 Pad2;
 } EFI_TIME;
 
-typedef struct _EFI_TIME_CAPABILITIES {
+typedef struct {
 	UINT32 Resolution;
 	UINT32 Accuracy;
 	BOOLEAN SetsToZero;
 } EFI_TIME_CAPABILITIES;
 
-typedef struct _EFI_TABLE_HEADER {
+typedef struct {
 	UINT64 Signature;
 	UINT32 Revision;
 	UINT32 HeaderSize;
@@ -144,18 +144,18 @@ typedef struct _EFI_TABLE_HEADER {
 	UINT32 Reserved;
 } EFI_TABLE_HEADER;
 
-typedef struct _EFI_INPUT_KEY {
+typedef struct {
 	UINT16 ScanCode;
 	CHAR16 UnicodeChar;
 } EFI_INPUT_KEY;
 
-typedef struct _EFI_DEVICE_PATH_PROTOCOL {
+typedef struct {
 	UINT8 Type;
 	UINT8 SubType;
 	UINT8 Length[2];
 } EFI_DEVICE_PATH_PROTOCOL;
 
-typedef struct _SIMPLE_TEXT_OUTPUT_MODE {
+typedef struct {
 	INT32 MaxMode;
 	INT32 Mode;
 	INT32 Attribute;
@@ -164,12 +164,12 @@ typedef struct _SIMPLE_TEXT_OUTPUT_MODE {
 	BOOLEAN CursorVisible;
 } SIMPLE_TEXT_OUTPUT_MODE;
 
-typedef struct _EFI_CONFIGURATION_TABLE {
+typedef struct {
 	EFI_GUID VendorGuid;
 	VOID* VendorTable;
 } EFI_CONFIGURATION_TABLE;
 
-typedef struct _EFI_MEMORY_DESCRIPTOR {
+typedef struct {
 	UINT32 Type;
 	EFI_PHYSICAL_ADDRESS PhysicalStart;
 	EFI_VIRTUAL_ADDRESS VirtualStart;
@@ -177,44 +177,44 @@ typedef struct _EFI_MEMORY_DESCRIPTOR {
 	UINT64 Attribute;
 } EFI_MEMORY_DESCRIPTOR;
 
-typedef struct _EFI_OPEN_PROTOCOL_INFORMATION_ENTRY {
+typedef struct {
 	EFI_HANDLE AgentHandle;
 	EFI_HANDLE ControllerHandle;
 	UINT32 Attributes;
 	UINT32 OpenCount;
 } EFI_OPEN_PROTOCOL_INFORMATION_ENTRY;
 
-typedef struct _EFI_HII_PACKAGE_LIST_HEADER {
+typedef struct {
 	EFI_GUID PackageListGuid;
 	UINT32 PackageLength;
 } EFI_HII_PACKAGE_LIST_HEADER, *EFI_HII_PACKAGE_LIST_PROTOCOL;
 
-typedef struct _EFI_CAPSULE_BLOCK_DESCRIPTOR {
+typedef struct {
 	UINT64 Length;
-	union _EFI_CAPSULE_BLOCK_ADDRESS {
+	union {
 		EFI_PHYSICAL_ADDRESS DataBlock;
 		EFI_PHYSICAL_ADDRESS ContinuationPointer;
 	} Union;
 } EFI_CAPSULE_BLOCK_DESCRIPTOR;
 
-typedef struct _EFI_CAPSULE_HEADER {
+typedef struct {
 	EFI_GUID CapsuleGuid;
 	UINT32 HeaderSize;
 	UINT32 Flags;
 	UINT32 CapsuleImageSize;
 } EFI_CAPSULE_HEADER;
 
-typedef struct _EFI_CAPSULE_TABLE {
+typedef struct {
 	UINT32 CapsuleArrayNumber;
 	VOID* CapsulePtr[1];
 } EFI_CAPSULE_TABLE;
 
-typedef struct _EFI_MEMORY_RANGE {
+typedef struct {
 	EFI_PHYSICAL_ADDRESS Address;
 	UINT64 Length;
 } EFI_MEMORY_RANGE;
 
-typedef struct _EFI_CAPSULE_RESULT_VARIABLE_HEADER {
+typedef struct {
 	UINT32 VariableTotalSize;
 	UINT32 Reserved;
 	EFI_GUID CapsuleGuid;
@@ -222,7 +222,7 @@ typedef struct _EFI_CAPSULE_RESULT_VARIABLE_HEADER {
 	EFI_STATUS CapsuleStatus;
 } EFI_CAPSULE_RESULT_VARIABLE_HEADER;
 
-typedef struct _SERIAL_IO_MODE {
+typedef struct {
 	UINT32 ControlMask;
 	UINT32 Timeout;
 	UINT64 BaudRate;
