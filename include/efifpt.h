@@ -16,7 +16,11 @@
 #define EFI_DISK_IO_PROTOCOL_REVISION 0x00010000
 #define EFI_DISK_IO2_PROTOCOL_GUID { 0x151C8EAE, 0x7F2C, 0x472C, { 0x9E, 0x54, 0x98, 0x28, 0x19, 0x4F, 0x6A, 0x88 } }
 #define EFI_DISK_IO2_PROTOCOL_REVISION 0x00020000
+#define EFI_BLOCK_IO_PROTOCOL_GUID { 0x964E5B21, 0x6459, 0x11D2, { 0x8E, 0x39, 0x00, 0xA0, 0xC9, 0x69, 0x72, 0x3B } }
+#define EFI_BLOCK_IO_PROTOCOL_REVISION2 0x00020000
+#define EFI_BLOCK_IO_PROTOCOL_REVISION3 ((EFI_BLOCK_IO_PROTOCOL_REVISION2) | 0x1F)
 
+// TYPE: File I/O Extension Token
 typedef struct {
 	EFI_EVENT Event;
 	EFI_STATUS Status;
@@ -24,11 +28,13 @@ typedef struct {
 	VOID* Buffer;
 } EFI_FILE_IO_TOKEN;
 
+// TYPE: Disk I/O Extension Token
 typedef struct {
 	EFI_EVENT Event;
 	EFI_STATUS TransactionStatus;
 } EFI_DISK_IO2_TOKEN;
 
+// TYPE: File System Information for UEFI
 typedef struct {
 	UINT64 Size;
 	BOOLEAN ReadOnly;
@@ -38,9 +44,25 @@ typedef struct {
 	CHAR16 VolumeLabel[];
 } EFI_FILE_SYSTEM_INFO;
 
+// TYPE: File System Volume Label for UEFI
 typedef struct {
 	CHAR16 VolumeLabel[];
 } EFI_FILE_SYSTEM_VOLUME_LABEL;
+
+typedef struct {
+	UINT32 MediaId;
+	BOOLEAN RemovableMedia;
+	BOOLEAN MediaPresent;
+	BOOLEAN LogicalPartition;
+	BOOLEAN ReadOnly;
+	BOOLEAN WriteCaching;
+	UINT32 BlockSize;
+	UINT32 IoAlign;
+	EFI_LBA LastBlock;
+	EFI_LBA LowestAlignedLba;
+	UINT32 LogicalBlocksPerPhysicalBlock;
+	UINT32 OptimalTransferLengthGranularity;
+} EFI_BLOCK_IO_MEDIA;
 
 typedef struct _EFI_FILE_PROTOCOL EFI_FILE_PROTOCOL;
 typedef struct _EFI_SIMPLE_FILE_SYSTEM_PROTOCOL EFI_SIMPLE_FILE_SYSTEM_PROTOCOL;

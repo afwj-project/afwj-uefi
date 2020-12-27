@@ -56,6 +56,7 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 	Status = gBS->SetWatchdogTimer(0, 0, 0, NULL);
 	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status, L"SetWatchdogTimer LVRgc+p7CSoc");
 	UefiInitializeConsole();
+	gST->ConOut->OutputString(gST->ConOut, L"Hello, world! This is Achatina Fulica White Jade.\r\n");
 	gST->ConOut->OutputString(gST->ConOut, L"Initialized console and services.\r\n");
 	UefiInitializeImage(ImageHandle);
 	gST->ConOut->OutputString(gST->ConOut, L"Initialized image and device path.\r\nVENDOR: ");

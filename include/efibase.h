@@ -30,7 +30,7 @@ typedef UINT64 EFI_VIRTUAL_ADDRESS;
 #define CONST const
 #define NULL ((VOID*)0)
 #define MAX_BIT 0x8000000000000000
-
+#define EFI_DEVICE_PATH_PROTOCOL_GUID { 0x09576E91, 0x6D3F, 0x11D2, { 0x8E, 0x39, 0x00, 0xA0, 0xC9, 0x69, 0x72, 0x3B } }
 
 typedef enum {
 	AllHandles,
@@ -55,6 +55,7 @@ typedef enum {
 	EFI_NATIVE_INTERFACE
 } EFI_INTERFACE_TYPE;
 
+// TYPE: Memory Usages for UEFI
 typedef enum {
 	EfiReservedMemoryType,
 	EfiLoaderCode,
@@ -74,6 +75,7 @@ typedef enum {
 	EfiMaxMemoryType
 } EFI_MEMORY_TYPE;
 
+// TYPE: Computer Reset Methods for UEFI
 typedef enum {
 	EfiResetCold,
 	EfiResetWarm,
@@ -81,6 +83,7 @@ typedef enum {
 	EfiResetPlatformSpecific
 } EFI_RESET_TYPE;
 
+// TYPE: Parity Bit Check Methods for UEFI
 typedef enum {
 	DefaultParity,
 	NoParity,
@@ -97,6 +100,7 @@ typedef enum {
 	TwoStopBits
 } EFI_STOP_BITS_TYPE;
 
+// TYPE: GUID for UEFI
 typedef struct {
 	UINT32 Data1;
 	UINT16 Data2;
@@ -108,14 +112,17 @@ typedef struct {
 	UINT8 Addr[32];
 } EFI_MAC_ADDRESS;
 
+// TYPE: IPv4 Address for UEFI
 typedef struct {
 	UINT8 Addr[4];
 } EFI_IPv4_ADDRESS;
 
+// TYPE: IPv6 Address for UEFI
 typedef struct {
 	UINT8 Addr[16];
 } EFI_IPv6_ADDRESS;
 
+// TYPE: Data of Date & Time
 typedef struct {
 	UINT16 Year;
 	UINT8 Month;
@@ -136,6 +143,7 @@ typedef struct {
 	BOOLEAN SetsToZero;
 } EFI_TIME_CAPABILITIES;
 
+// TYPE: Table Header for UEFI
 typedef struct {
 	UINT64 Signature;
 	UINT32 Revision;
@@ -149,6 +157,10 @@ typedef struct {
 	CHAR16 UnicodeChar;
 } EFI_INPUT_KEY;
 
+/*
+ * GUID: 09576E91-6D3F-11D2-8E3900A0C969723B
+ * TYPE: Device Path Data
+ */
 typedef struct {
 	UINT8 Type;
 	UINT8 SubType;
