@@ -1,6 +1,7 @@
 #pragma once
 
 #include "efidef.h"
+#include "efifpt.h"
 
 extern EFI_SYSTEM_TABLE* ST;
 #define gST ST
@@ -19,6 +20,10 @@ extern EFI_GUID DevicePathFromTextProtocolGuid;
 #define gDevicePathFromTextProtocolGuid DevicePathFromTextProtocolGuid
 extern EFI_GUID DevicePathUtilitiesProtocolGuid;
 #define gDevicePathUtilitiesProtocolGuid DevicePathUtilitiesProtocolGuid
+extern EFI_GUID BlockIoProtocolGuid;
+#define gBlockIoProtocolGuid BlockIoProtocolGuid
+extern EFI_GUID BlockIo2ProtocolGuid;
+#define gBlockIo2ProtocolGuid BlockIo2ProtocolGuid
 
 extern EFI_LOADED_IMAGE_PROTOCOL* LoadedImageProtocol;
 #define gLoadedImageProtocol LoadedImageProtocol
@@ -28,3 +33,5 @@ extern EFI_DEVICE_PATH_FROM_TEXT_PROTOCOL* DevicePathFromTextProtocol;
 #define gDevicePathFromTextProtocol DevicePathFromTextProtocol
 extern EFI_DEVICE_PATH_UTILITIES_PROTOCOL* DevicePathUtilitiesProtocol;
 #define gDevicePathUtilitiesProtocol DevicePathUtilitiesProtocol
+extern EFI_BLOCK_IO_PROTOCOL* BlockIoProtocol;
+#define gBlockIoProtocol BlockIoProtocol

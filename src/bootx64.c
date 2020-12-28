@@ -1,22 +1,9 @@
 #include "eficio.h"
+#include "efimem.h"
 #include "kbinfm.h"
 
 #define SYSTEM_CHECK_LOCATION { L"efi", L"afwjos", L"scheck.efi" }
 
-EFI_SYSTEM_TABLE* ST;
-EFI_BOOT_SERVICES* BS;
-EFI_RUNTIME_SERVICES* RT;
-
-EFI_GUID LoadedImageProtocolGuid = EFI_LOADED_IMAGE_PROTOCOL_GUID;
-EFI_GUID DevicePathProtocolGuid = EFI_DEVICE_PATH_PROTOCOL_GUID;
-EFI_GUID DevicePathToTextProtocolGuid = EFI_DEVICE_PATH_TO_TEXT_PROTOCOL_GUID;
-EFI_GUID DevicePathFromTextProtocolGuid = EFI_DEVICE_PATH_FROM_TEXT_PROTOCOL_GUID;
-EFI_GUID DevicePathUtilitiesProtocolGuid = EFI_DEVICE_PATH_UTILITIES_PROTOCOL_GUID;
-
-EFI_LOADED_IMAGE_PROTOCOL* LoadedImageProtocol = NULL;
-EFI_DEVICE_PATH_TO_TEXT_PROTOCOL* DevicePathToTextProtocol = NULL;
-EFI_DEVICE_PATH_FROM_TEXT_PROTOCOL* DevicePathFromTextProtocol = NULL;
-EFI_DEVICE_PATH_UTILITIES_PROTOCOL* DevicePathUtilitiesProtocol = NULL;
 EFI_HANDLE SystemCheckImage = NULL;
 
 VOID UefiInitializeImage(IN EFI_HANDLE ImageHandle) {
@@ -41,6 +28,11 @@ VOID UefiLoadSystemCheck(IN EFI_HANDLE ImageHandle) {
 		gLoadedImageProtocol->DeviceHandle, &gDevicePathProtocolGuid, (VOID**)&SystemCheckPath,
 		ImageHandle, NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL);
 	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status, L"OpenProtocol 5roQjGJTiHQM");
+	gST->ConOut->OutputString(gST->ConOut, L"\r\nDEVP: ");
+	gST->ConOut->OutputString(
+		gST->ConOut, gDevicePathToTextProtocol->ConvertDevicePathToText(
+			SystemCheckPath, FALSE, FALSE));
+	gST->ConOut->OutputString(gST->ConOut, L"\r\nFinding system check application... ");
 	for (UINTN i = 0; i < 3; i++) SystemCheckPath = gDevicePathUtilitiesProtocol->AppendDeviceNode(SystemCheckPath, SystemCheckNodes[i]);
 	Status = gBS->LoadImage(FALSE, ImageHandle, SystemCheckPath, NULL, 0, &SystemCheckImage);
 	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status, L"LoadImage sa5Q2t/ritW7");
@@ -69,14 +61,12 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 	gST->ConOut->OutputString(
 		gST->ConOut, gDevicePathToTextProtocol->ConvertDevicePathToText(
 			gLoadedImageProtocol->FilePath, FALSE, FALSE));
-	gST->ConOut->OutputString(gST->ConOut, L"\r\nFinding system check application... ");
 	UefiLoadSystemCheck(ImageHandle);
 	gST->ConOut->OutputString(gST->ConOut, L"PROFIT!\r\nRunning system check application...\r\n");
 	gBS->StartImage(SystemCheckImage, NULL, NULL);
-	Status = gBS->AllocatePool(EfiLoaderData, sizeof(KERNEL_BINARY_SECTION_INFO) * 16, (VOID**)&SectionInfo);
-	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status, L"AllocatePool qkMTHm0FNbCw");
-	Status = gBS->FreePool((VOID*)SectionInfo);
-	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status, L"FreePool 7cUFwavcRAoo");
+	SectionInfo = (KERNEL_BINARY_SECTION_INFO*)UefiMalloc(sizeof(KERNEL_BINARY_SECTION_INFO) * 16);
+	if (SectionInfo == NULL) UefiErrorShutdown(Status, L"UefiMalloc qkMTHm0FNbCw");
+	UefiFree(SectionInfo);
 	gST->ConOut->OutputString(gST->ConOut, L"Press keyboard to return.\r\n");
 	do {
 		Status = gST->ConIn->ReadKeyStroke(gST->ConIn, &ShutdownKey);

@@ -1,15 +1,18 @@
 cflags = -fno-builtin -fno-stack-protector -nostdinc -Wall -Wextra -I include
 lflags = -s -nostdlib -e UefiMain --subsystem 10 -shared
+efiobj = obj/efi*.o
 
 rule cc
   command = x86_64-w64-mingw32-gcc -c $cflags $in -o $out
 
 rule ld
-  command = ld $in $lflags -o $out
+  command = ld $in $efiobj $lflags -o $out
 
-build obj/bootx64.o: cc src/bootx64.c
+build obj/efigvars.o: cc src/efigvars.c
 build obj/eficio.o: cc src/eficio.c
 build obj/efierr.o: cc src/efierr.c
+build obj/efimem.o: cc src/efimem.c
+build obj/bootx64.o: cc src/bootx64.c
 build obj/scheck.o: cc src/scheck.c
-build bin/bootx64.efi: ld obj/bootx64.o obj/eficio.o obj/efierr.o
-build bin/scheck.efi: ld obj/scheck.o obj/eficio.o obj/efierr.o
+build bin/bootx64.efi: ld obj/bootx64.o
+build bin/scheck.efi: ld obj/scheck.o
