@@ -20,6 +20,10 @@ extern EFI_GUID DevicePathFromTextProtocolGuid;
 #define gDevicePathFromTextProtocolGuid DevicePathFromTextProtocolGuid
 extern EFI_GUID DevicePathUtilitiesProtocolGuid;
 #define gDevicePathUtilitiesProtocolGuid DevicePathUtilitiesProtocolGuid
+extern EFI_GUID DiskIoProtocolGuid;
+#define gDiskIoProtocolGuid DiskIoProtocolGuid
+extern EFI_GUID DiskIo2ProtocolGuid;
+#define gDiskIo2ProtocolGuid DiskIo2ProtocolGuid
 extern EFI_GUID BlockIoProtocolGuid;
 #define gBlockIoProtocolGuid BlockIoProtocolGuid
 extern EFI_GUID BlockIo2ProtocolGuid;
@@ -33,5 +37,7 @@ extern EFI_DEVICE_PATH_FROM_TEXT_PROTOCOL* DevicePathFromTextProtocol;
 #define gDevicePathFromTextProtocol DevicePathFromTextProtocol
 extern EFI_DEVICE_PATH_UTILITIES_PROTOCOL* DevicePathUtilitiesProtocol;
 #define gDevicePathUtilitiesProtocol DevicePathUtilitiesProtocol
+extern EFI_DISK_IO_PROTOCOL* DiskIoProtocol;
+#define gDiskIoProtocol DiskIoProtocol
 extern EFI_BLOCK_IO_PROTOCOL* BlockIoProtocol;
 #define gBlockIoProtocol BlockIoProtocol

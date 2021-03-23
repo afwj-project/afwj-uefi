@@ -20,6 +20,7 @@
 #define EFI_BLOCK_IO_PROTOCOL_REVISION2 0x00020000
 #define EFI_BLOCK_IO_PROTOCOL_REVISION3 ((EFI_BLOCK_IO_PROTOCOL_REVISION2) | 0x1F)
 #define EFI_BLOCK_IO2_PROTOCOL_GUID { 0xA77B2472, 0xE282, 0x4E9F, { 0xA2, 0x45, 0xC2, 0xC0, 0xE2, 0x7B, 0xBC, 0xC1 } }
+#define EFI_PTAB_HEADER_ID 0x5452415020494645
 
 // TYPE: File I/O Extension Token
 typedef struct {
@@ -70,6 +71,20 @@ typedef struct {
 	UINT32 LogicalBlocksPerPhysicalBlock;
 	UINT32 OptimalTransferLengthGranularity;
 } EFI_BLOCK_IO_MEDIA;
+
+typedef struct {
+	EFI_TABLE_HEADER Hdr;
+	EFI_LBA MyLBA;
+	EFI_LBA AlternateLBA;
+	EFI_LBA FirstUsableLBA;
+	EFI_LBA LastUsableLBA;
+	EFI_GUID DiskGUID;
+	EFI_LBA PartitionEntryLBA;
+	UINT32 NumberOfPartitionEntries;
+	UINT32 SizeOfPartitionEntry;
+	UINT32 PartitionEntryArrayCRC32;
+	UINT8 Reserved[420];
+} EFI_PARTITION_TABLE_HEADER;
 
 typedef struct _EFI_FILE_PROTOCOL EFI_FILE_PROTOCOL;
 typedef struct _EFI_SIMPLE_FILE_SYSTEM_PROTOCOL EFI_SIMPLE_FILE_SYSTEM_PROTOCOL;
