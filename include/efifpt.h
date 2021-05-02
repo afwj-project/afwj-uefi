@@ -86,6 +86,15 @@ typedef struct {
 	UINT8 Reserved[420];
 } EFI_PARTITION_TABLE_HEADER;
 
+typedef struct {
+	EFI_GUID PartitionTypeGUID;
+	EFI_GUID UniquePartitionGUID;
+	EFI_LBA StartingLBA;
+	EFI_LBA EndingLBA;
+	UINT64 Attributes;
+	CHAR16 PartitionName[36];
+} EFI_PARTITION_ENTRY;
+
 typedef struct _EFI_FILE_PROTOCOL EFI_FILE_PROTOCOL;
 typedef struct _EFI_SIMPLE_FILE_SYSTEM_PROTOCOL EFI_SIMPLE_FILE_SYSTEM_PROTOCOL;
 typedef struct _EFI_LOAD_FILE_PROTOCOL EFI_LOAD_FILE_PROTOCOL;
