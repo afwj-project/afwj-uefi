@@ -12,6 +12,7 @@ build obj/efigvars.o: cc src/efigvars.c
 build obj/eficio.o: cc src/eficio.c
 build obj/efierr.o: cc src/efierr.c
 build obj/efimem.o: cc src/efimem.c
+build obj/efiutils.o: cc src/efiutils.c
 build obj/bootx64.o: cc src/bootx64.c
 build obj/scheck.o: cc src/scheck.c
 build bin/bootx64.efi: ld obj/bootx64.o
