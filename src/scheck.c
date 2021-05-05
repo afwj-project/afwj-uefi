@@ -40,6 +40,7 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 	EFI_PARTITION_ENTRY* PartitionEntry;
 	EFI_DEVICE_PATH_PROTOCOL* BlockPath;
 	CHAR16* BlockPathText;
+	UINTN NumberOfEntryBlocks;
 	for (UINTN HandleIndex = 0; HandleIndex < HandleCount; HandleIndex++) {
 		Status = gBS->HandleProtocol(BlockControllerHandles[HandleIndex], &gBlockIoProtocolGuid, (VOID**)&gBlockIoProtocol);
 		if (Status != EFI_SUCCESS) {
@@ -82,10 +83,11 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 		gST->ConOut->OutputString(gST->ConOut, L"GPT header was found.\r\nNoPE: ");
 		UefiPrintDecimalUnsigned(GptHeader->NumberOfPartitionEntries);
 		gST->ConOut->OutputString(gST->ConOut, L"\r\nChecking partition entries...\r\n");
-		for (UINTN EntryIndex = 0; EntryIndex < GptHeader->NumberOfPartitionEntries; EntryIndex++) {
+		NumberOfEntryBlocks = GptHeader->NumberOfPartitionEntries / 4;
+		for (UINTN EntryBlockIndex = 0; EntryBlockIndex < NumberOfEntryBlocks; EntryBlockIndex++) {
 			PartitionEntryBuffer = (UINT8*)UefiMalloc(gBlockIoProtocol->Media->BlockSize);
 			Status = gBlockIoProtocol->ReadBlocks(
-				gBlockIoProtocol, gBlockIoProtocol->Media->MediaId, (EFI_LBA)(2 + EntryIndex),
+				gBlockIoProtocol, gBlockIoProtocol->Media->MediaId, (EFI_LBA)(2 + EntryBlockIndex),
 				gBlockIoProtocol->Media->BlockSize, PartitionEntryBuffer);
 			if (Status != EFI_SUCCESS) {
 				UefiFree(PartitionEntryBuffer);
@@ -93,8 +95,10 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 				continue;
 			}
 			PartitionEntry = (EFI_PARTITION_ENTRY*)PartitionEntryBuffer;
-			if (IsZeroGUID(PartitionEntry->PartitionTypeGUID)) continue;
-			gST->ConOut->OutputString(gST->ConOut, L"Partition entry was found.\r\n");
+			for (UINTN EntryDataIndex = 0; EntryDataIndex < 4; EntryDataIndex++) {
+				if (IsZeroGUID(PartitionEntry[EntryDataIndex].PartitionTypeGUID)) continue;
+				gST->ConOut->OutputString(gST->ConOut, L"Partition entry was found.\r\n");
+			}
 			UefiFree(PartitionEntryBuffer);
 		}
 		UefiFree(GptHeaderBuffer);
