@@ -1,6 +1,7 @@
 #include "eficio.h"
 #include "efimem.h"
 #include "efiutils.h"
+#include "snailfs.h"
 
 VOID UefiInitializeApplication(IN EFI_HANDLE ImageHandle) {
 	EFI_STATUS Status;
@@ -34,13 +35,20 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 	gST->ConOut->OutputString(gST->ConOut, L"\r\nStarted to read blocks of hard drive.\r\n");
 	Status = gBS->LocateHandleBuffer(ByProtocol, &gBlockIoProtocolGuid, NULL, &HandleCount, &BlockControllerHandles);
 	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status, L"LocateHandleBuffer xaCnH1jkgASt");
+	EFI_PARTITION_ENTRY* OperatingSystemEntry = (EFI_PARTITION_ENTRY*)UefiMalloc(sizeof(EFI_PARTITION_ENTRY));
+	UINT8* BootRecordBuffer;
+	UINT8* TableHdrBuffer;
 	UINT8* GptHeaderBuffer;
 	UINT8* PartitionEntryBuffer;
 	EFI_PARTITION_TABLE_HEADER* GptHeader;
 	EFI_PARTITION_ENTRY* PartitionEntry;
 	EFI_DEVICE_PATH_PROTOCOL* BlockPath;
 	CHAR16* BlockPathText;
+	SNAILFS_BOOT_RECORD* BootRecord;
+	SNAILFS_TABLE_HEADER* TableHdr;
+	EFI_BLOCK_IO_PROTOCOL* OperatingSystemBlockIo;
 	UINTN NumberOfEntryBlocks;
+	BOOLEAN FoundFlag = FALSE;
 	for (UINTN HandleIndex = 0; HandleIndex < HandleCount; HandleIndex++) {
 		Status = gBS->HandleProtocol(BlockControllerHandles[HandleIndex], &gBlockIoProtocolGuid, (VOID**)&gBlockIoProtocol);
 		if (Status != EFI_SUCCESS) {
@@ -97,12 +105,62 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 			PartitionEntry = (EFI_PARTITION_ENTRY*)PartitionEntryBuffer;
 			for (UINTN EntryDataIndex = 0; EntryDataIndex < 4; EntryDataIndex++) {
 				if (IsZeroGUID(PartitionEntry[EntryDataIndex].PartitionTypeGUID)) continue;
-				gST->ConOut->OutputString(gST->ConOut, L"Partition entry was found.\r\n");
+				gST->ConOut->OutputString(gST->ConOut, L"Partition entry was found.\r\nPART");
+				UefiPrintDecimalUnsigned(EntryBlockIndex * 4 + EntryDataIndex);
+				gST->ConOut->OutputString(gST->ConOut, L" START:");
+				UefiPrintDecimalUnsigned(PartitionEntry[EntryDataIndex].StartingLBA);
+				gST->ConOut->OutputString(gST->ConOut, L" END:");
+				UefiPrintDecimalUnsigned(PartitionEntry[EntryDataIndex].EndingLBA);
+				gST->ConOut->OutputString(gST->ConOut, L"\r\n");
+				if (EntryBlockIndex * 4 + EntryDataIndex != 1) continue;
+				UefiMemCpy(OperatingSystemEntry, &PartitionEntry[EntryDataIndex], sizeof(EFI_PARTITION_ENTRY));
 			}
 			UefiFree(PartitionEntryBuffer);
 		}
 		UefiFree(GptHeaderBuffer);
+		if (!FoundFlag) {
+			OperatingSystemBlockIo = gBlockIoProtocol;
+			FoundFlag = TRUE;
+		}
 	}
+	gST->ConOut->OutputString(gST->ConOut, L"Checking boot signature...\r\n");
+	BootRecordBuffer = (UINT8*)UefiMalloc(OperatingSystemBlockIo->Media->BlockSize);
+	Status = OperatingSystemBlockIo->ReadBlocks(
+		OperatingSystemBlockIo, OperatingSystemBlockIo->Media->MediaId, OperatingSystemEntry->StartingLBA,
+		OperatingSystemBlockIo->Media->BlockSize, BootRecordBuffer);
+	if (Status != EFI_SUCCESS) {
+		UefiFree(OperatingSystemEntry);
+		UefiFree(BootRecordBuffer);
+		UefiErrorShutdown(Status, L"ReadBlocks SKvsx1tu1L9c");
+	}
+	BootRecord = (SNAILFS_BOOT_RECORD*)BootRecordBuffer;
+	if (BootRecord->Signature != SNAILFS_BOOT_SIGNATURE) {
+		gST->ConOut->OutputString(gST->ConOut, L"Boot signature was not found.\r\n");
+		UefiFree(OperatingSystemEntry);
+		UefiFree(BootRecordBuffer);
+		return EFI_NOT_FOUND;
+	}
+	gST->ConOut->OutputString(gST->ConOut, L"Boot signature was found.\r\nChecking file system...\r\n");
+	TableHdrBuffer = (UINT8*)UefiMalloc(OperatingSystemBlockIo->Media->BlockSize);
+	Status = OperatingSystemBlockIo->ReadBlocks(
+		OperatingSystemBlockIo, OperatingSystemBlockIo->Media->MediaId, (OperatingSystemEntry->StartingLBA + 1),
+		OperatingSystemBlockIo->Media->BlockSize, TableHdrBuffer);
+	if (Status != EFI_SUCCESS) {
+		UefiFree(OperatingSystemEntry);
+		UefiFree(BootRecordBuffer);
+		UefiFree(TableHdrBuffer);
+		UefiErrorShutdown(Status, L"ReadBlocks 8+w5FbqmznIW");
+	}
+	TableHdr = (SNAILFS_TABLE_HEADER*)TableHdrBuffer;
+	if (TableHdr->FileSystemChecking != SNAILFS_MAGIC_CODE) {
+		gST->ConOut->OutputString(gST->ConOut, L"Unsupported file system.\r\n");
+		UefiFree(OperatingSystemEntry);
+		UefiFree(TableHdrBuffer);
+		return EFI_UNSUPPORTED;
+	}
+	gST->ConOut->OutputString(gST->ConOut, L"Supported file system was found.\r\n");
 	gST->ConOut->OutputString(gST->ConOut, L"Kernel is not ready.\r\n");
+	UefiFree(OperatingSystemEntry);
+	UefiFree(TableHdrBuffer);
 	return EFI_SUCCESS;
 }

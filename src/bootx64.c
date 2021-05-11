@@ -63,7 +63,8 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 			gLoadedImageProtocol->FilePath, FALSE, FALSE));
 	UefiLoadSystemCheck(ImageHandle);
 	gST->ConOut->OutputString(gST->ConOut, L"PROFIT!\r\nRunning system check application...\r\n");
-	gBS->StartImage(SystemCheckImage, NULL, NULL);
+	Status = gBS->StartImage(SystemCheckImage, NULL, NULL);
+	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status, L"StartImage IBFivywzWeBZ");
 	SectionInfo = (KERNEL_BINARY_SECTION_INFO*)UefiMalloc(sizeof(KERNEL_BINARY_SECTION_INFO) * 16);
 	if (SectionInfo == NULL) UefiErrorShutdown(Status, L"UefiMalloc qkMTHm0FNbCw");
 	UefiFree(SectionInfo);
