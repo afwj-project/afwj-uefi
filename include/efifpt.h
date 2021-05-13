@@ -72,6 +72,7 @@ typedef struct {
 	UINT32 OptimalTransferLengthGranularity;
 } EFI_BLOCK_IO_MEDIA;
 
+#pragma pack(push, 1)
 typedef struct {
 	EFI_TABLE_HEADER Hdr;
 	EFI_LBA MyLBA;
@@ -94,6 +95,7 @@ typedef struct {
 	UINT64 Attributes;
 	CHAR16 PartitionName[36];
 } EFI_PARTITION_ENTRY;
+#pragma pack(pop)
 
 typedef struct _EFI_FILE_PROTOCOL EFI_FILE_PROTOCOL;
 typedef struct _EFI_SIMPLE_FILE_SYSTEM_PROTOCOL EFI_SIMPLE_FILE_SYSTEM_PROTOCOL;

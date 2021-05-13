@@ -6,7 +6,9 @@
 #define SNAILFS_SPECIFICATION_VERSION SNAILFS_0_10_REVISION
 #define SNAILFS_BOOT_SIGNATURE 0xAA55
 #define SNAILFS_MAGIC_CODE 0x3053464C49414E53
+#define SNAILFS_AFWJOS_CHECK 0x4E4B534F4A574641
 
+#pragma pack(push, 1)
 typedef struct {
 	UINT8 Reserved[510];
 	UINT16 Signature;
@@ -33,3 +35,4 @@ typedef struct {
 	UINT64 FileAccess;
 	UINT8 Reserved[2016];
 } SNAILFS_DATA_TUPLE, *SNAILFS_DATA_TABLE;
+#pragma pack(pop)

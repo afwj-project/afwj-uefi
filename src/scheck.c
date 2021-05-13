@@ -16,6 +16,62 @@ VOID UefiInitializeApplication(IN EFI_HANDLE ImageHandle) {
 	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status, L"HandleProtocol 3l4xR6bb1MpT");
 }
 
+VOID UefiCheckSnailBootRecord(IN SNAILFS_BOOT_RECORD* BootRecord, OUT EFI_STATUS* StatusRef) {
+	if (BootRecord->Signature != SNAILFS_BOOT_SIGNATURE) {
+		gST->ConOut->OutputString(gST->ConOut, L"Boot signature was not found.\r\n");
+		*StatusRef = EFI_NOT_FOUND;
+	} else {
+		gST->ConOut->OutputString(gST->ConOut, L"Boot signature was found.\r\n");
+		*StatusRef = EFI_SUCCESS;
+	}
+}
+
+VOID UefiCheckSnailTableHdr(IN SNAILFS_TABLE_HEADER* TableHdr, OUT EFI_STATUS* StatusRef) {
+	if (TableHdr->FileSystemChecking != SNAILFS_MAGIC_CODE) {
+		gST->ConOut->OutputString(gST->ConOut, L"Unsupported file system.\r\n");
+		goto COMPATIBILITY_ERROR;
+	}
+	if (TableHdr->VersionInformation != SNAILFS_0_10_REVISION) {
+		gST->ConOut->OutputString(gST->ConOut, L"Version of file system is not compatible with operating system.\r\n");
+		goto COMPATIBILITY_ERROR;
+	}
+	if (TableHdr->OperatingSystemChecking != SNAILFS_AFWJOS_CHECK) {
+		gST->ConOut->OutputString(gST->ConOut, L"Failed to check operating system.\r\n");
+		goto COMPATIBILITY_ERROR;
+	}
+	gST->ConOut->OutputString(gST->ConOut, L"Supported file system was found.\r\n");
+	goto CHECKING_PROFIT;
+COMPATIBILITY_ERROR:
+	*StatusRef = EFI_UNSUPPORTED;
+	return;
+CHECKING_PROFIT:
+	*StatusRef = EFI_SUCCESS;
+}
+
+VOID UefiCheckSnailTableSize(
+	IN SNAILFS_TABLE_HEADER* TableHdr,
+	IN EFI_PARTITION_ENTRY* PartitionEntry,
+	OUT EFI_STATUS* StatusRef
+) {
+	UINT64 FromEntry = PartitionEntry->EndingLBA - PartitionEntry->StartingLBA + 1;
+	UINT64 FromHdr = 2 + TableHdr->MaximumTableLength * 8 + TableHdr->MaximumTotalBlocks;
+	if (FromEntry != FromHdr) {
+		gST->ConOut->OutputString(gST->ConOut, L"Failed to check size of partition.\r\n");
+		goto INVALID_HEADER;
+	}
+	if (TableHdr->EndingDataAddress - TableHdr->StartingDataAddress + 1 != TableHdr->MaximumTotalBlocks) {
+		gST->ConOut->OutputString(gST->ConOut, L"Failed to check size of data area.\r\n");
+		goto INVALID_HEADER;
+	}
+	gST->ConOut->OutputString(gST->ConOut, L"Table header is normal.\r\n");
+	goto CHECKING_PROFIT;
+INVALID_HEADER:
+	*StatusRef = EFI_DEVICE_ERROR;
+	return;
+CHECKING_PROFIT:
+	*StatusRef = EFI_SUCCESS;
+}
+
 EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable) {
 	EFI_STATUS Status;
 	UINTN HandleCount;
@@ -44,8 +100,6 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 	EFI_PARTITION_ENTRY* PartitionEntry;
 	EFI_DEVICE_PATH_PROTOCOL* BlockPath;
 	CHAR16* BlockPathText;
-	SNAILFS_BOOT_RECORD* BootRecord;
-	SNAILFS_TABLE_HEADER* TableHdr;
 	EFI_BLOCK_IO_PROTOCOL* OperatingSystemBlockIo;
 	UINTN NumberOfEntryBlocks;
 	BOOLEAN FoundFlag = FALSE;
@@ -133,14 +187,13 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 		UefiFree(BootRecordBuffer);
 		UefiErrorShutdown(Status, L"ReadBlocks SKvsx1tu1L9c");
 	}
-	BootRecord = (SNAILFS_BOOT_RECORD*)BootRecordBuffer;
-	if (BootRecord->Signature != SNAILFS_BOOT_SIGNATURE) {
-		gST->ConOut->OutputString(gST->ConOut, L"Boot signature was not found.\r\n");
+	UefiCheckSnailBootRecord((SNAILFS_BOOT_RECORD*)BootRecordBuffer, &Status);
+	if (Status != EFI_SUCCESS) {
 		UefiFree(OperatingSystemEntry);
 		UefiFree(BootRecordBuffer);
-		return EFI_NOT_FOUND;
+		return Status;
 	}
-	gST->ConOut->OutputString(gST->ConOut, L"Boot signature was found.\r\nChecking file system...\r\n");
+	gST->ConOut->OutputString(gST->ConOut, L"Checking file system...\r\n");
 	TableHdrBuffer = (UINT8*)UefiMalloc(OperatingSystemBlockIo->Media->BlockSize);
 	Status = OperatingSystemBlockIo->ReadBlocks(
 		OperatingSystemBlockIo, OperatingSystemBlockIo->Media->MediaId, (OperatingSystemEntry->StartingLBA + 1),
@@ -151,16 +204,24 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 		UefiFree(TableHdrBuffer);
 		UefiErrorShutdown(Status, L"ReadBlocks 8+w5FbqmznIW");
 	}
-	TableHdr = (SNAILFS_TABLE_HEADER*)TableHdrBuffer;
-	if (TableHdr->FileSystemChecking != SNAILFS_MAGIC_CODE) {
-		gST->ConOut->OutputString(gST->ConOut, L"Unsupported file system.\r\n");
+	UefiCheckSnailTableHdr((SNAILFS_TABLE_HEADER*)TableHdrBuffer, &Status);
+	if (Status != EFI_SUCCESS) {
 		UefiFree(OperatingSystemEntry);
+		UefiFree(BootRecordBuffer);
 		UefiFree(TableHdrBuffer);
-		return EFI_UNSUPPORTED;
+		return Status;
 	}
-	gST->ConOut->OutputString(gST->ConOut, L"Supported file system was found.\r\n");
-	gST->ConOut->OutputString(gST->ConOut, L"Kernel is not ready.\r\n");
+	gST->ConOut->OutputString(gST->ConOut, L"Checking other data of table header...\r\n");
+	UefiCheckSnailTableSize((SNAILFS_TABLE_HEADER*)TableHdrBuffer, OperatingSystemEntry, &Status);
+	if (Status != EFI_SUCCESS) {
+		UefiFree(OperatingSystemEntry);
+		UefiFree(BootRecordBuffer);
+		UefiFree(TableHdrBuffer);
+		return Status;
+	}
+	gST->ConOut->OutputString(gST->ConOut, L"Looking for kernel file...\r\n");
 	UefiFree(OperatingSystemEntry);
+	UefiFree(BootRecordBuffer);
 	UefiFree(TableHdrBuffer);
 	return EFI_SUCCESS;
 }
