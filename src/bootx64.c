@@ -1,5 +1,5 @@
-#include "eficio.h"
-#include "efimem.h"
+#include "efi/eficio.h"
+#include "efi/efimem.h"
 #include "kbinfm.h"
 
 #define SYSTEM_CHECK_LOCATION { L"efi", L"afwjos", L"scheck.efi" }

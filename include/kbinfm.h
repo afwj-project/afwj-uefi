@@ -1,6 +1,6 @@
 #pragma once
 
-#include "efidef.h"
+#include "efi/efidef.h"
 
 #define KERNEL_BINARY_TEXT 0x5E96
 #define KERNEL_BINARY_DATA 0xA911

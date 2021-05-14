@@ -1,6 +1,6 @@
 #pragma once
 
-#include "efibase.h"
+#include "efi/efibase.h"
 
 #define SNAILFS_0_10_REVISION ((0 << 16) | (10))
 #define SNAILFS_SPECIFICATION_VERSION SNAILFS_0_10_REVISION
@@ -36,3 +36,10 @@ typedef struct {
 	UINT8 Reserved[2016];
 } SNAILFS_DATA_TUPLE, *SNAILFS_DATA_TABLE;
 #pragma pack(pop)
+
+VOID UefiCheckSnailBootRecord(IN SNAILFS_BOOT_RECORD* BootRecord, OUT EFI_STATUS* StatusRef);
+VOID UefiCheckSnailTableHdr(IN SNAILFS_TABLE_HEADER* TableHdr, OUT EFI_STATUS* StatusRef);
+VOID UefiCheckSnailTableSize(
+	IN SNAILFS_TABLE_HEADER* TableHdr,
+	IN EFI_PARTITION_ENTRY* PartitionEntry,
+	OUT EFI_STATUS* StatusRef);

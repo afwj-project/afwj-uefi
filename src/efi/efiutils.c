@@ -1,4 +1,4 @@
-#include "efiutils.h"
+#include "efi/efiutils.h"
 
 BOOLEAN IsZeroGUID(IN EFI_GUID TargetGUID) {
 	if (TargetGUID.Data1 != 0) return FALSE;

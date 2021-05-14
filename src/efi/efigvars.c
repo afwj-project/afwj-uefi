@@ -1,4 +1,4 @@
-#include "efigvars.h"
+#include "efi/efigvars.h"
 
 EFI_SYSTEM_TABLE* ST;
 EFI_BOOT_SERVICES* BS;

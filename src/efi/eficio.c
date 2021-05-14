@@ -1,4 +1,4 @@
-#include "eficio.h"
+#include "efi/eficio.h"
 
 CHAR16 OutputBuffer[1024];
 UINTN OutputLength;
