@@ -41,3 +41,8 @@ extern EFI_DISK_IO_PROTOCOL* DiskIoProtocol;
 #define gDiskIoProtocol DiskIoProtocol
 extern EFI_BLOCK_IO_PROTOCOL* BlockIoProtocol;
 #define gBlockIoProtocol BlockIoProtocol
+
+extern EFI_PARTITION_ENTRY* OperatingSystemEntry;
+#define gOperatingSystemEntry OperatingSystemEntry
+extern EFI_BLOCK_IO_PROTOCOL* OperatingSystemBlockIo;
+#define gOperatingSystemBlockIo OperatingSystemBlockIo

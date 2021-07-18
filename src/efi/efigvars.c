@@ -20,3 +20,6 @@ EFI_DEVICE_PATH_FROM_TEXT_PROTOCOL* DevicePathFromTextProtocol = NULL;
 EFI_DEVICE_PATH_UTILITIES_PROTOCOL* DevicePathUtilitiesProtocol = NULL;
 EFI_DISK_IO_PROTOCOL* DiskIoProtocol = NULL;
 EFI_BLOCK_IO_PROTOCOL* BlockIoProtocol = NULL;
+
+EFI_PARTITION_ENTRY* OperatingSystemEntry = NULL;
+EFI_BLOCK_IO_PROTOCOL* OperatingSystemBlockIo = NULL;
