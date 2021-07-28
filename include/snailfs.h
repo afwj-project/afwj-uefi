@@ -35,11 +35,46 @@ typedef struct {
 	UINT64 FileAccess;
 	UINT8 Reserved[2016];
 } SNAILFS_DATA_TUPLE, *SNAILFS_DATA_TABLE;
+
+typedef struct {
+	UINT8 SectorData[504];
+	EFI_LBA NextLink;
+} SNAILFS_DATA_RECORD;
+
+typedef union {
+	SNAILFS_DATA_RECORD SectorRecord;
+	UINT8 SectorBuffer[512];
+} SNAILFS_SECTOR;
 #pragma pack(pop)
 
+extern SNAILFS_BOOT_RECORD* BootRecord;
+#define gBootRecord BootRecord
+extern SNAILFS_TABLE_HEADER* TableHdr;
+#define gTableHdr TableHdr
+extern SNAILFS_SECTOR* ZeroSector;
+#define gZeroSector ZeroSector
+
+EFI_STATUS UefiSnailFileSystemInit();
 VOID UefiCheckSnailBootRecord(IN SNAILFS_BOOT_RECORD* BootRecord, OUT EFI_STATUS* StatusRef);
 VOID UefiCheckSnailTableHdr(IN SNAILFS_TABLE_HEADER* TableHdr, OUT EFI_STATUS* StatusRef);
 VOID UefiCheckSnailTableSize(
 	IN SNAILFS_TABLE_HEADER* TableHdr,
 	IN EFI_PARTITION_ENTRY* PartitionEntry,
 	OUT EFI_STATUS* StatusRef);
+
+typedef struct {
+	UINT64 FileDescriptor;
+	CHAR16 FilePath[1024];
+	UINT64 FileAddress;
+	UINT64 FileSize;
+	UINT64 FileControl;
+	EFI_LBA CurrentLBA;
+	UINT8* WriteBuffer;
+} SNAILFS_FILE;
+
+EFI_STATUS UefiGetSnailZeroIndex(OUT UINT64* IndexRef);
+EFI_STATUS UefiGetZeroSectorIndex(OUT UINT64* IndexRef);
+
+EFI_STATUS UefiSnailFileSearch(IN CONST CHAR16* FilePath, OUT SNAILFS_DATA_TABLE SelectedTable);
+SNAILFS_FILE* UefiSnailFileOpen(IN CONST CHAR16* FilePath, IN CHAR8 OpenType, OUT EFI_STATUS* StatusRef);
+EFI_STATUS UefiSnailFileClose(IN SNAILFS_FILE* Stream);

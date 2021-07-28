@@ -29,7 +29,7 @@ EFI_STATUS UefiRealloc(IN OUT VOID** Pool, IN UINTN Size) {
 	if (Status != EFI_SUCCESS) return Status;
 	UINT64 TempSize = UefiGetMemSize(Temp, &Status);
 	if (Status != EFI_SUCCESS) return Status;
-	UefiMemCpy(*Pool, Temp, TempSize);
+	gBS->CopyMem(*Pool, Temp, TempSize);
 	for (UINTN i = 0; i < 2048; i++) {
 		if (PoolTable[i].Ptr == Temp && PoolTable[i].Size == TempSize) {
 			PoolTable[i].Size = Size;
@@ -60,10 +60,4 @@ VOID UefiFree(IN VOID* Pool) {
 		}
 	}
 	gBS->FreePool(Pool);
-}
-
-VOID UefiMemCpy(OUT VOID* Destination, IN CONST VOID* Source, IN UINTN Length) {
-	UINT8* DestinationRaw = (UINT8*)Destination;
-	UINT8* SourceRaw = (UINT8*)Source;
-	while (Length--) *DestinationRaw++ = *SourceRaw++;
 }

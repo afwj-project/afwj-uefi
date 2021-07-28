@@ -8,6 +8,7 @@ EFI_HANDLE SystemCheckImage = NULL;
 
 VOID UefiInitializeImage(IN EFI_HANDLE ImageHandle) {
 	EFI_STATUS Status;
+	UefiMemInit();
 	Status = gBS->LocateProtocol(&gDevicePathToTextProtocolGuid, NULL, (VOID**)&gDevicePathToTextProtocol);
 	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status, L"LocateProtocol Lc4bMjr5gxaW");
 	Status = gBS->LocateProtocol(&gDevicePathFromTextProtocolGuid, NULL, (VOID**)&gDevicePathFromTextProtocol);

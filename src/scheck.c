@@ -5,15 +5,15 @@
 
 VOID UefiInitializeApplication(IN EFI_HANDLE ImageHandle) {
 	EFI_STATUS Status;
+	UefiMemInit();
 	UefiFlushOutputBuffer();
 	Status = gBS->LocateProtocol(&gDevicePathToTextProtocolGuid, NULL, (VOID**)&gDevicePathToTextProtocol);
 	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status, L"LocateProtocol Ym6Da/DYMiaJ");
 	Status = gBS->LocateProtocol(&gDevicePathFromTextProtocolGuid, NULL, (VOID**)&gDevicePathFromTextProtocol);
 	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status, L"LocateProtocol GL9fznDL3R3v");
-	Status = gBS->LocateProtocol(&gBlockIoProtocolGuid, NULL, (VOID**)&gBlockIoProtocol);
-	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status, L"LocateProtocol 0E0rv3MRTkTu");
 	Status = gBS->HandleProtocol(ImageHandle, &gLoadedImageProtocolGuid, (VOID**)&gLoadedImageProtocol);
 	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status, L"HandleProtocol 3l4xR6bb1MpT");
+	gOperatingSystemEntry = (EFI_PARTITION_ENTRY*)UefiMalloc(sizeof(EFI_PARTITION_ENTRY));
 }
 
 EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable) {
@@ -35,7 +35,6 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 	gST->ConOut->OutputString(gST->ConOut, L"\r\nStarted to read blocks of hard drive.\r\n");
 	Status = gBS->LocateHandleBuffer(ByProtocol, &gBlockIoProtocolGuid, NULL, &HandleCount, &BlockControllerHandles);
 	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status, L"LocateHandleBuffer xaCnH1jkgASt");
-	EFI_PARTITION_ENTRY* OperatingSystemEntry = (EFI_PARTITION_ENTRY*)UefiMalloc(sizeof(EFI_PARTITION_ENTRY));
 	UINT8* BootRecordBuffer;
 	UINT8* TableHdrBuffer;
 	UINT8* GptHeaderBuffer;
@@ -44,7 +43,6 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 	EFI_PARTITION_ENTRY* PartitionEntry;
 	EFI_DEVICE_PATH_PROTOCOL* BlockPath;
 	CHAR16* BlockPathText;
-	EFI_BLOCK_IO_PROTOCOL* OperatingSystemBlockIo;
 	UINTN NumberOfEntryBlocks;
 	BOOLEAN FoundFlag = FALSE;
 	for (UINTN HandleIndex = 0; HandleIndex < HandleCount; HandleIndex++) {
@@ -110,61 +108,69 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 				gST->ConOut->OutputString(gST->ConOut, L" END:");
 				UefiPrintDecimalUnsigned(PartitionEntry[EntryDataIndex].EndingLBA);
 				gST->ConOut->OutputString(gST->ConOut, L"\r\n");
-				if (EntryBlockIndex * 4 + EntryDataIndex != 1) continue;
-				UefiMemCpy(OperatingSystemEntry, &PartitionEntry[EntryDataIndex], sizeof(EFI_PARTITION_ENTRY));
+				if (EntryBlockIndex * 4 + EntryDataIndex != 1 || FoundFlag) continue;
+				gBS->CopyMem(gOperatingSystemEntry, &PartitionEntry[EntryDataIndex], sizeof(EFI_PARTITION_ENTRY));
 			}
 			UefiFree(PartitionEntryBuffer);
 		}
 		UefiFree(GptHeaderBuffer);
 		if (!FoundFlag) {
-			OperatingSystemBlockIo = gBlockIoProtocol;
+			gOperatingSystemBlockIo = gBlockIoProtocol;
 			FoundFlag = TRUE;
 		}
 	}
 	gST->ConOut->OutputString(gST->ConOut, L"Checking boot signature...\r\n");
-	BootRecordBuffer = (UINT8*)UefiMalloc(OperatingSystemBlockIo->Media->BlockSize);
-	Status = OperatingSystemBlockIo->ReadBlocks(
-		OperatingSystemBlockIo, OperatingSystemBlockIo->Media->MediaId, OperatingSystemEntry->StartingLBA,
-		OperatingSystemBlockIo->Media->BlockSize, BootRecordBuffer);
+	BootRecordBuffer = (UINT8*)UefiMalloc(gOperatingSystemBlockIo->Media->BlockSize);
+	Status = gOperatingSystemBlockIo->ReadBlocks(
+		gOperatingSystemBlockIo,
+		gOperatingSystemBlockIo->Media->MediaId,
+		gOperatingSystemEntry->StartingLBA,
+		gOperatingSystemBlockIo->Media->BlockSize,
+		BootRecordBuffer);
 	if (Status != EFI_SUCCESS) {
-		UefiFree(OperatingSystemEntry);
+		UefiFree(gOperatingSystemEntry);
 		UefiFree(BootRecordBuffer);
 		UefiErrorShutdown(Status, L"ReadBlocks SKvsx1tu1L9c");
 	}
 	UefiCheckSnailBootRecord((SNAILFS_BOOT_RECORD*)BootRecordBuffer, &Status);
 	if (Status != EFI_SUCCESS) {
-		UefiFree(OperatingSystemEntry);
+		UefiFree(gOperatingSystemEntry);
 		UefiFree(BootRecordBuffer);
 		return Status;
 	}
+	gBootRecord = (SNAILFS_BOOT_RECORD*)BootRecordBuffer;
 	gST->ConOut->OutputString(gST->ConOut, L"Checking file system...\r\n");
-	TableHdrBuffer = (UINT8*)UefiMalloc(OperatingSystemBlockIo->Media->BlockSize);
-	Status = OperatingSystemBlockIo->ReadBlocks(
-		OperatingSystemBlockIo, OperatingSystemBlockIo->Media->MediaId, (OperatingSystemEntry->StartingLBA + 1),
-		OperatingSystemBlockIo->Media->BlockSize, TableHdrBuffer);
+	TableHdrBuffer = (UINT8*)UefiMalloc(gOperatingSystemBlockIo->Media->BlockSize);
+	Status = gOperatingSystemBlockIo->ReadBlocks(
+		gOperatingSystemBlockIo,
+		gOperatingSystemBlockIo->Media->MediaId,
+		gOperatingSystemEntry->StartingLBA + 1,
+		gOperatingSystemBlockIo->Media->BlockSize,
+		TableHdrBuffer);
 	if (Status != EFI_SUCCESS) {
-		UefiFree(OperatingSystemEntry);
+		UefiFree(gOperatingSystemEntry);
 		UefiFree(BootRecordBuffer);
 		UefiFree(TableHdrBuffer);
 		UefiErrorShutdown(Status, L"ReadBlocks 8+w5FbqmznIW");
 	}
 	UefiCheckSnailTableHdr((SNAILFS_TABLE_HEADER*)TableHdrBuffer, &Status);
 	if (Status != EFI_SUCCESS) {
-		UefiFree(OperatingSystemEntry);
+		UefiFree(gOperatingSystemEntry);
 		UefiFree(BootRecordBuffer);
 		UefiFree(TableHdrBuffer);
 		return Status;
 	}
 	gST->ConOut->OutputString(gST->ConOut, L"Checking other data of table header...\r\n");
-	UefiCheckSnailTableSize((SNAILFS_TABLE_HEADER*)TableHdrBuffer, OperatingSystemEntry, &Status);
+	UefiCheckSnailTableSize((SNAILFS_TABLE_HEADER*)TableHdrBuffer, gOperatingSystemEntry, &Status);
 	if (Status != EFI_SUCCESS) {
-		UefiFree(OperatingSystemEntry);
+		UefiFree(gOperatingSystemEntry);
 		UefiFree(BootRecordBuffer);
 		UefiFree(TableHdrBuffer);
 		return Status;
 	}
+	gTableHdr = (SNAILFS_TABLE_HEADER*)TableHdrBuffer;
 	gST->ConOut->OutputString(gST->ConOut, L"Looking for kernel file...\r\n");
-	UefiFree(OperatingSystemEntry);
+	UefiFree(gOperatingSystemEntry);
 	UefiFree(BootRecordBuffer);
 	UefiFree(TableHdrBuffer);
 	return EFI_SUCCESS;
