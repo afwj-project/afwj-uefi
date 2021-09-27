@@ -147,7 +147,7 @@ SNAILFS_FILE* UefiSnailFileOpen(IN CONST CHAR16* FilePath, IN CHAR8 OpenType, OU
 		Stream->FileControl = SNAILFS_FILE_WRITE;
 		Stream->WriteBuffer = (UINT8*)UefiMalloc(504);
 		if (*StatusRef == EFI_NOT_FOUND) Stream->CurrentLBA = 0;
-		else Stream->CurrentLBA = DataTable->StartingLBA;
+		else Stream->CurrentLBA = DataTable->PartAddresses[0].StartingLBA;
 		goto END_OF_FUNCTION;
 	} else if (OpenType == 'r') {
 		if (*StatusRef == EFI_NOT_FOUND) goto ERROR_OF_FUNCTION;
@@ -155,7 +155,7 @@ SNAILFS_FILE* UefiSnailFileOpen(IN CONST CHAR16* FilePath, IN CHAR8 OpenType, OU
 		Stream->FileAddress = 0;
 		Stream->FileSize = DataTable->FileSize;
 		Stream->FileControl = SNAILFS_FILE_READ;
-		Stream->CurrentLBA = DataTable->StartingLBA;
+		Stream->CurrentLBA = DataTable->PartAddresses[0].StartingLBA;
 		Stream->WriteBuffer = NULL;
 		goto END_OF_FUNCTION;
 	} else {

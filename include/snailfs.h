@@ -28,12 +28,16 @@ typedef struct {
 } SNAILFS_TABLE_HEADER;
 
 typedef struct {
-	CHAR16 FilePath[1024];
 	EFI_LBA StartingLBA;
-	EFI_LBA EndingLBA;
+	EFI_LBA SectorCount;
+} FILE_PART_INFO;
+
+typedef struct {
+	CHAR16 FilePath[1024];
+	FILE_PART_INFO PartAddresses[64];
 	UINT64 FileSize;
 	UINT64 FileAccess;
-	UINT8 Reserved[2016];
+	UINT8 Reserved[1008];
 } SNAILFS_DATA_TUPLE, *SNAILFS_DATA_TABLE;
 
 typedef struct {
