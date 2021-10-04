@@ -2,6 +2,9 @@
 
 #include "efigvars.h"
 
+#define UefiMemCpy gBS->CopyMem // ALIAS: Memory Copy Function
+#define UefiMemSet gBS->SetMem // ALIAS: Memory Set Function
+
 typedef struct {
 	UINT64 Size;
 	VOID* Ptr;
