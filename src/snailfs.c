@@ -5,7 +5,7 @@
 
 #define SNAILFS_FILE_READ 0x0000000000000001
 #define SNAILFS_FILE_WRITE 0x0000000000000002
-#define SNAILFS_ENDING_LINK 0xFFFFFFFFFFFFFFFF
+#define SNAILFS_FILE_ADD 0x0000000000000003
 
 SNAILFS_BOOT_RECORD* BootRecord = NULL;
 SNAILFS_TABLE_HEADER* TableHdr = NULL;
@@ -145,7 +145,7 @@ SNAILFS_FILE* UefiSnailFileOpen(IN CONST CHAR16* FilePath, IN CHAR8 OpenType, OU
 		Stream->FileAddress = 0;
 		Stream->FileSize = 0;
 		Stream->FileControl = SNAILFS_FILE_WRITE;
-		Stream->WriteBuffer = (UINT8*)UefiMalloc(504);
+		Stream->WriteBuffer = (UINT8*)UefiMalloc(512);
 		if (*StatusRef == EFI_NOT_FOUND) Stream->CurrentLBA = 0;
 		else Stream->CurrentLBA = DataTable->PartAddresses[0].StartingLBA;
 		goto END_OF_FUNCTION;
@@ -172,8 +172,20 @@ EFI_STATUS UefiSnailFileClose(IN SNAILFS_FILE* Stream) {
 	SNAILFS_DATA_TABLE DataTable = (SNAILFS_DATA_TABLE)UefiMalloc(sizeof(SNAILFS_DATA_TUPLE));
 	EFI_STATUS Status = UefiSnailFileSearch(Stream->FilePath, DataTable);
 	if (Stream->FileControl == SNAILFS_FILE_WRITE && Status == EFI_NOT_FOUND) {
+		// TODO: add file creation code
 	} else if (Stream->FileControl == SNAILFS_FILE_WRITE && Status == EFI_SUCCESS) {
+		// TODO: add file overwriting code
 	}
 	UefiFree(Stream);
 	return EFI_SUCCESS;
+}
+
+UINTN UefiSnailFileRead(OUT VOID* DstBuffer, IN UINTN PartSize, IN OUT SNAILFS_FILE* Stream) {
+	// TODO: add file reading code
+	return PartSize;
+}
+
+UINTN UefiSnailFileWrite(IN CONST VOID* SrcBuffer, IN UINTN PartSize, IN OUT SNAILFS_FILE* Stream) {
+	// TODO: add file writing code
+	return PartSize;
 }
