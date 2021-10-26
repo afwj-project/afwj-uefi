@@ -6,7 +6,6 @@
 VOID UefiInitializeApplication(IN EFI_HANDLE ImageHandle) {
 	EFI_STATUS Status;
 	UefiMemInit();
-	UefiFlushOutputBuffer();
 	Status = gBS->LocateProtocol(&gDevicePathToTextProtocolGuid, NULL, (VOID**)&gDevicePathToTextProtocol);
 	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status, L"LocateProtocol Ym6Da/DYMiaJ");
 	Status = gBS->LocateProtocol(&gDevicePathFromTextProtocolGuid, NULL, (VOID**)&gDevicePathFromTextProtocol);
@@ -37,14 +36,15 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status, L"LocateHandleBuffer xaCnH1jkgASt");
 	UINT8* BootRecordBuffer;
 	UINT8* TableHdrBuffer;
-	UINT8* GptHeaderBuffer;
-	UINT8* PartitionEntryBuffer;
+	UINT8* GptHeaderBuffer = NULL;
+	UINT8* PartitionEntryBuffer = NULL;
 	EFI_PARTITION_TABLE_HEADER* GptHeader;
 	EFI_PARTITION_ENTRY* PartitionEntry;
 	EFI_DEVICE_PATH_PROTOCOL* BlockPath;
 	CHAR16* BlockPathText;
 	UINTN NumberOfEntryBlocks;
 	BOOLEAN FoundFlag = FALSE;
+	SNAILFS_DATA_TABLE KernelFileInfo;
 	for (UINTN HandleIndex = 0; HandleIndex < HandleCount; HandleIndex++) {
 		Status = gBS->HandleProtocol(BlockControllerHandles[HandleIndex], &gBlockIoProtocolGuid, (VOID**)&gBlockIoProtocol);
 		if (Status != EFI_SUCCESS) {
@@ -109,7 +109,7 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 				UefiPrintDecimalUnsigned(PartitionEntry[EntryDataIndex].EndingLBA);
 				gST->ConOut->OutputString(gST->ConOut, L"\r\n");
 				if (EntryBlockIndex * 4 + EntryDataIndex != 1 || FoundFlag) continue;
-				gBS->CopyMem(gOperatingSystemEntry, &PartitionEntry[EntryDataIndex], sizeof(EFI_PARTITION_ENTRY));
+				UefiMemCpy(gOperatingSystemEntry, &PartitionEntry[EntryDataIndex], sizeof(EFI_PARTITION_ENTRY));
 			}
 			UefiFree(PartitionEntryBuffer);
 		}
@@ -170,6 +170,14 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 	}
 	gTableHdr = (SNAILFS_TABLE_HEADER*)TableHdrBuffer;
 	gST->ConOut->OutputString(gST->ConOut, L"Looking for kernel file...\r\n");
+	Status = UefiSnailFileSearch(L"/kernel.bin", KernelFileInfo);
+	if (Status != EFI_SUCCESS) {
+		UefiFree(gOperatingSystemEntry);
+		UefiFree(BootRecordBuffer);
+		UefiFree(TableHdrBuffer);
+		gST->ConOut->OutputString(gST->ConOut, L"FAILED: kernel file not found\r\n");
+		return Status;
+	}
 	UefiFree(gOperatingSystemEntry);
 	UefiFree(BootRecordBuffer);
 	UefiFree(TableHdrBuffer);
