@@ -181,11 +181,13 @@ EFI_STATUS UefiSnailFileClose(IN SNAILFS_FILE* Stream) {
 }
 
 UINTN UefiSnailFileRead(OUT VOID* DstBuffer, IN UINTN PartSize, IN OUT SNAILFS_FILE* Stream) {
+	if (Stream->FileControl != SNAILFS_FILE_READ) return 0;
 	// TODO: add file reading code
 	return PartSize;
 }
 
 UINTN UefiSnailFileWrite(IN CONST VOID* SrcBuffer, IN UINTN PartSize, IN OUT SNAILFS_FILE* Stream) {
+	if (Stream->FileControl != SNAILFS_FILE_WRITE) return 0;
 	// TODO: add file writing code
 	return PartSize;
 }

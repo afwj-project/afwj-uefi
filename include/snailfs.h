@@ -41,12 +41,6 @@ typedef struct {
 } SNAILFS_DATA_TUPLE, *SNAILFS_DATA_TABLE;
 
 typedef struct {
-	UINT8 SectorData[504];
-	EFI_LBA NextLink;
-} SNAILFS_DATA_RECORD;
-
-typedef union {
-	SNAILFS_DATA_RECORD SectorRecord;
 	UINT8 SectorBuffer[512];
 } SNAILFS_SECTOR;
 #pragma pack(pop)
