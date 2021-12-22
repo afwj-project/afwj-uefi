@@ -44,7 +44,7 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 	CHAR16* BlockPathText;
 	UINTN NumberOfEntryBlocks;
 	BOOLEAN FoundFlag = FALSE;
-	SNAILFS_DATA_TABLE KernelFileInfo;
+	SNAILFS_DATA_TABLE KernelFileInfo = (SNAILFS_DATA_TABLE)UefiMalloc(sizeof(SNAILFS_DATA_TUPLE));
 	for (UINTN HandleIndex = 0; HandleIndex < HandleCount; HandleIndex++) {
 		Status = gBS->HandleProtocol(BlockControllerHandles[HandleIndex], &gBlockIoProtocolGuid, (VOID**)&gBlockIoProtocol);
 		if (Status != EFI_SUCCESS) {
@@ -178,6 +178,7 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 		gST->ConOut->OutputString(gST->ConOut, L"FAILED: kernel file not found\r\n");
 		return Status;
 	}
+	gST->ConOut->OutputString(gST->ConOut, L"PROFIT: kernel file found\r\n");
 	UefiFree(gOperatingSystemEntry);
 	UefiFree(BootRecordBuffer);
 	UefiFree(TableHdrBuffer);

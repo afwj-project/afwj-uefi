@@ -52,7 +52,7 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 	EFI_PARTITION_TABLE_HEADER* GptHeader;
 	EFI_PARTITION_ENTRY* PartitionEntry;
 	UINT8* KernelBuffer = NULL;
-	KERNEL_BINARY_SECTION_INFO* SectionInfo = (KERNEL_BINARY_SECTION_INFO*)UefiMalloc(sizeof(KERNEL_BINARY_SECTION_INFO) * 16);
+	KERNEL_BINARY_SECTION_INFO* SectionInfo;
 	UINTN NumberOfEntryBlocks;
 	BOOLEAN FoundFlag = FALSE;
 	UINT64 EntryReadingControl = 0;
@@ -132,20 +132,16 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 			FoundFlag = TRUE;
 		}
 	}
+	SectionInfo = (KERNEL_BINARY_SECTION_INFO*)UefiMalloc(sizeof(KERNEL_BINARY_SECTION_INFO) * 16);
 	if (SectionInfo == NULL) UefiErrorShutdown(Status, L"UefiMalloc qkMTHm0FNbCw");
+	gST->ConOut->OutputString(gST->ConOut, L"Reading kernel file...\r\n");
 	// TODO: add kernel file execution code
 	UefiFree(SectionInfo);
 	gST->ConOut->OutputString(gST->ConOut, L"Press keyboard to return.\r\n");
 	do {
 		Status = gST->ConIn->ReadKeyStroke(gST->ConIn, &ShutdownKey);
 	} while (Status == EFI_NOT_READY);
-	gST->ConOut->OutputString(gST->ConOut, L"MjAxOC4wNyB+IDIwMjIuMDcg7KO87Iud7ZqM7IKsIOyXkOyKpOygnOydtO2LsOyGjO2UhO2KuOyb\r\n");
-	gST->ConOut->OutputString(gST->ConOut, L"qOyWtCDrjIDtkZzsnbTsgqwKMjAyMS4wOCB+IDIwMjMuMDIg6rO16rWwIOyYiOu5hOyepeq1kO2b\r\n");
-	gST->ConOut->OutputString(gST->ConOut, L"hOuztOyDnSDtlZzslpHsgqzsnbTrsoTrjIDtlZnqtZAg7IaM7IaNCuyVnuycvOuhnOydmCDsp4Tr\r\n");
-	gST->ConOut->OutputString(gST->ConOut, L"oZzripQg6rWt7ZqM7J2Y7JuQIO2bhOuztCDstpzrp4jsmYAg6riI7Jy17Yis7J6Q652864qUIO2K\r\n");
-	gST->ConOut->OutputString(gST->ConOut, L"ueuzhO2VnCDrkZAg6rCA7KeAIOyYiOyZuCDsgqztla3sl5Ag7ZW064u565CY7KeAIOyViuuKlOuL\r\n");
-	gST->ConOut->OutputString(gST->ConOut, L"pOuptCwg7J206rO1IOqzhOyXtOqzvCDsmIjsiKAg6rOE7Je07J20IOycte2VqeuQnCDrtoTslbwg\r\n");
-	gST->ConOut->OutputString(gST->ConOut, L"7JWI7JeQ7IScIO2ZnOyVve2VmOqyjCDrkKAg6rKDIOqwmeuLpC4=\r\n");
+	gST->ConOut->OutputString(gST->ConOut, L"Good bye, big friend who likes ScTechEngiAMath!\r\n");
 	gRT->ResetSystem(EfiResetShutdown, EFI_SUCCESS, 0, NULL);
 	return EFI_SUCCESS;
 }
