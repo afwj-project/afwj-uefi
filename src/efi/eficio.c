@@ -94,6 +94,18 @@ EFI_STATUS UefiPrintMemoryAddress(IN UINTN MemoryAddress) {
 	return EFI_SUCCESS;
 }
 
+EFI_STATUS UefiPrintProgressBar(IN UINTN StatusCount) {
+	OutputBuffer[OutputLength++] = L'P';
+	OutputBuffer[OutputLength++] = L':';
+	for (UINTN i = 0; i < 32; i++) {
+		if (i < StatusCount) OutputBuffer[OutputLength++] = L'1';
+		else OutputBuffer[OutputLength++] = L'0';
+	}
+	gST->ConOut->OutputString(gST->ConOut, OutputBuffer);
+	UefiFlushOutputBuffer();
+	return EFI_SUCCESS;
+}
+
 EFI_STATUS UefiScanSecretText(OUT CHAR16* StringBuffer, IN UINTN StringLength) {
 	EFI_STATUS Status;
 	EFI_INPUT_KEY PushedKey;

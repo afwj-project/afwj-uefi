@@ -1,6 +1,7 @@
 #include "efi/efigvars.h"
 #include "efi/efimem.h"
 #include "efi/efiutils.h"
+#include "efi/eficio.h"
 #include "snailfs.h"
 
 #define SNAILFS_FILE_READ 0x0000000000000001
@@ -123,6 +124,8 @@ EFI_STATUS UefiSnailFileSearch(IN CONST CHAR16* FilePath, OUT SNAILFS_DATA_TABLE
 			gOperatingSystemEntry->StartingLBA + 2 + SectorsPerTuple * i,
 			sizeof(SNAILFS_DATA_TUPLE), DataTableBuffer);
 		DataTable = (SNAILFS_DATA_TABLE)DataTableBuffer;
+		gST->ConOut->OutputString(gST->ConOut, L"\r");
+		UefiPrintProgressBar(32 * (i + 1) / gTableHdr->MaximumTableLength);
 		if (IsZeroSpace(DataTable, sizeof(SNAILFS_DATA_TUPLE))) continue;
 		if (!UefiWideStrCmp(FilePath, DataTable[i].FilePath)) {
 			gBS->CopyMem(SelectedTable, DataTable, sizeof(SNAILFS_DATA_TUPLE));
@@ -130,6 +133,7 @@ EFI_STATUS UefiSnailFileSearch(IN CONST CHAR16* FilePath, OUT SNAILFS_DATA_TABLE
 			return EFI_SUCCESS;
 		}
 	}
+	gST->ConOut->OutputString(gST->ConOut, L"\r\n");
 	UefiFree(DataTableBuffer);
 	return EFI_NOT_FOUND;
 }
