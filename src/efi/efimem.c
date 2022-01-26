@@ -1,6 +1,8 @@
 #include "efi/efimem.h"
 
 EFI_MEMORY_TUPLE PoolTable[2048];
+EFI_MEMORY_MAP MemoryMap;
+UINT64 NextAllocPage;
 
 VOID UefiMemInit() {
 	for (UINTN i = 0; i < 2048; i++) {
@@ -60,4 +62,10 @@ VOID UefiFree(IN VOID* Pool) {
 		}
 	}
 	gBS->FreePool(Pool);
+}
+
+VOID* UefiAllocPage() {
+	VOID* Page = (VOID*)NextAllocPage;
+	NextAllocPage += 4096;
+	return Page;
 }
