@@ -1,3 +1,4 @@
+.intel_syntax noprefix
 .global LoadPml4
 LoadPml4:
 	mov rax, 0x000FFFFFFFFFF000

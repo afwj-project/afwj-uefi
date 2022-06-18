@@ -1,3 +1,4 @@
+.intel_syntax noprefix
 .global ToUserspace
 ToUserspace:
 	mov rcx, rdi

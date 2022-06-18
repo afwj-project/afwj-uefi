@@ -1,6 +1,7 @@
+.intel_syntax noprefix
 .global LoadGdt
 LoadGdt:
-	ldgt [rdi]
+	lgdt [rdi]
 	mov ax, 0x40
 	ltr ax
 	mov ax, 0x10

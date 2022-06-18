@@ -1,19 +1,28 @@
 cflags = -fno-builtin -fno-stack-protector -nostdinc -Wall -Wextra -I include
+aflags = --64 -msyntax=intel -mmnemonic=intel
 lflags = -s -nostdlib -e UefiMain --subsystem 10 -shared
 efiobj = obj/efi/efi*.o
 sfsobj = obj/snailfs.o
+asmobj = obj/asm/*.o
+
+rule as
+  command = as $aflags $in -o $out
 
 rule cc
   command = x86_64-w64-mingw32-gcc -c $cflags $in -o $out
 
 rule ld
-  command = ld $in $efiobj $sfsobj $lflags -o $out
+  command = ld $in $efiobj $sfsobj $asmobj $lflags -o $out
 
 build obj/efi/efigvars.o: cc src/efi/efigvars.c
 build obj/efi/eficio.o: cc src/efi/eficio.c
 build obj/efi/efierr.o: cc src/efi/efierr.c
 build obj/efi/efimem.o: cc src/efi/efimem.c
 build obj/efi/efiutils.o: cc src/efi/efiutils.c
+build obj/asm/enabsce.o: as src/asm/enabsce.s
+build obj/asm/loadgdt.o: as src/asm/loadgdt.s
+build obj/asm/loadpml4.o: as src/asm/loadpml4.s
+build obj/asm/userspace.o: as src/asm/userspace.s
 build obj/snailfs.o: cc src/snailfs.c
 build obj/bootx64.o: cc src/bootx64.c
 build obj/scheck.o: cc src/scheck.c
