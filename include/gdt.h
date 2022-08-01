@@ -24,6 +24,31 @@ typedef struct {
 	GLOBAL_DESCRIPTOR_TABLE_ENTRY TssLow;
 	GLOBAL_DESCRIPTOR_TABLE_ENTRY TssHigh;
 } GLOBAL_DESCRIPTOR_TABLE;
+
+typedef struct {
+	UINT8 Reserved0[4];
+	UINT64 Rsp0;
+	UINT64 Rsp1;
+	UINT64 Rsp2;
+	UINT8 Reserved1[8];
+	UINT64 Ist1;
+	UINT64 Ist2;
+	UINT64 Ist3;
+	UINT64 Ist4;
+	UINT64 Ist5;
+	UINT64 Ist6;
+	UINT64 Ist7;
+	UINT8 Reserved2[10];
+	UINT16 IopbOffset;
+} TASK_STATE_SEGMENT;
+
+typedef struct {
+	UINT16 Limit;
+	UINT64 Base;
+} TABLE_POINTER;
 #pragma pack(pop)
 
 extern GLOBAL_DESCRIPTOR_TABLE GDT;
+extern TASK_STATE_SEGMENT TSS;
+extern VOID LoadGdt(TABLE_POINTER* GdtPtr);
+VOID SetupGlobalDescriptorTable();
