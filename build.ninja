@@ -4,15 +4,17 @@ lflags = -s -nostdlib -e UefiMain --subsystem 10 -shared
 efiobj = obj/efi/efi*.o
 sfsobj = obj/snailfs.o
 asmobj = obj/asm/*.o
+ldselect = python ./build/ldselect.py
+asselect = python ./build/asselect.py
 
 rule as
-  command = as $aflags $in -o $out
+  command = $asselect $aflags $in -o $out
 
 rule cc
   command = x86_64-w64-mingw32-gcc -c $cflags $in -o $out
 
 rule ld
-  command = ld $in $efiobj $sfsobj $asmobj $lflags -o $out
+  command = $ldselect $in $efiobj $sfsobj $asmobj $lflags -o $out
 
 build obj/efi/efigvars.o: cc src/efi/efigvars.c
 build obj/efi/eficio.o: cc src/efi/eficio.c
