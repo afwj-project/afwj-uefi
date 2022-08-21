@@ -1,4 +1,4 @@
-#!python
+#!/usr/bin/env python
 
 '''
 Python 3.x virtual environment required.
