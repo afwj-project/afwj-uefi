@@ -66,7 +66,9 @@ typedef struct {
 	UINT64 FileAddress;
 	UINT64 FileSize;
 	UINT64 FileControl;
-	EFI_LBA CurrentLBA;
+	UINT64 CurrentPID;
+	FILE_PART_INFO PartAddresses[64];
+	UINT8* ReadBuffer;
 	UINT8* WriteBuffer;
 } SNAILFS_FILE;
 

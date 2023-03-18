@@ -2,6 +2,7 @@
 #include "efi/efimem.h"
 #include "efi/efiutils.h"
 #include "kbinfm.h"
+#include "snailfs.h"
 
 #define SYSTEM_CHECK_LOCATION { L"efi", L"afwjos", L"scheck.efi" }
 
@@ -132,9 +133,27 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 			FoundFlag = TRUE;
 		}
 	}
+	EFI_MEMORY_DESCRIPTOR* DescriptorEntry = NULL;
+	MemoryMap.MemoryMapSize = EFI_MEMORY_MAP_SIZE;
+	gBS->GetMemoryMap(
+		&MemoryMap.MemoryMapSize, MemoryMap.MemoryMapBuffer, &MemoryMap.MapKey,
+		&MemoryMap.DescriptorSize, &MemoryMap.DescriptorVersion);
+	UINT64 BestAllocStart = 0;
+	UINT64 BestNumberOfPages = 0;
+	for (UINTN i = 0; i < MemoryMap.MemoryMapSize; i += MemoryMap.DescriptorSize) {
+		DescriptorEntry = (EFI_MEMORY_DESCRIPTOR*)&MemoryMap.MemoryMapBuffer[i];
+		if (DescriptorEntry->Type != EfiConventionalMemory) continue;
+		if (DescriptorEntry->NumberOfPages > BestNumberOfPages) {
+			BestNumberOfPages = DescriptorEntry->NumberOfPages;
+			BestAllocStart = DescriptorEntry->PhysicalStart;
+		}
+	}
+	NextAllocPage = BestAllocStart;
+	SNAILFS_FILE* KernelFile = UefiSnailFileOpen(L"/kernel.bin", 'r', &Status);
 	SectionInfo = (KERNEL_BINARY_SECTION_INFO*)UefiMalloc(sizeof(KERNEL_BINARY_SECTION_INFO) * 16);
 	if (SectionInfo == NULL) UefiErrorShutdown(Status, L"UefiMalloc qkMTHm0FNbCw");
 	gST->ConOut->OutputString(gST->ConOut, L"Reading kernel file...\r\n");
+	UefiSnailFileClose(KernelFile);
 	// TODO: add kernel file execution code
 	UefiFree(SectionInfo);
 	gST->ConOut->OutputString(gST->ConOut, L"Press keyboard to return.\r\n");
