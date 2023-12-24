@@ -8,5 +8,6 @@ Test Environment
 QEMU 6.2.0 + OVMF
 Samsung Galaxy Book Pro
 Microsoft Hyper-V => Temporarily Unused
+VMWare Workstation 16 Pro
 
 This is bootloader of AFWJ OS.
