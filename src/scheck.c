@@ -3,6 +3,10 @@
 #include "efi/efiutils.h"
 #include "snailfs.h"
 
+VOID ___chkstk_ms(){
+	return;
+}
+
 VOID UefiInitializeApplication(IN EFI_HANDLE ImageHandle) {
 	EFI_STATUS Status;
 	UefiMemInit();

@@ -8,6 +8,10 @@
 
 EFI_HANDLE SystemCheckImage = NULL;
 
+VOID ___chkstk_ms(){
+	return;
+}
+
 VOID UefiInitializeImage(IN EFI_HANDLE ImageHandle) {
 	EFI_STATUS Status;
 	UefiMemInit();
@@ -153,6 +157,8 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 	SectionInfo = (KERNEL_BINARY_SECTION_INFO*)UefiMalloc(sizeof(KERNEL_BINARY_SECTION_INFO) * 16);
 	if (SectionInfo == NULL) UefiErrorShutdown(Status, L"UefiMalloc qkMTHm0FNbCw");
 	gST->ConOut->OutputString(gST->ConOut, L"Reading kernel file...\r\n");
+	KernelBuffer = (UINT8*)UefiMalloc(KernelFile->FileSize);
+	UefiSnailFileRead(KernelBuffer, KernelFile->FileSize, KernelFile);
 	UefiSnailFileClose(KernelFile);
 	// TODO: add kernel file execution code
 	UefiFree(SectionInfo);
@@ -160,7 +166,7 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 	do {
 		Status = gST->ConIn->ReadKeyStroke(gST->ConIn, &ShutdownKey);
 	} while (Status == EFI_NOT_READY);
-	gST->ConOut->OutputString(gST->ConOut, L"Good bye, big friend who likes ScTechEngiAMath!\r\n");
+	gST->ConOut->OutputString(gST->ConOut, L"Un escargot au lieu d\'une petite amie.\r\n");
 	gRT->ResetSystem(EfiResetShutdown, EFI_SUCCESS, 0, NULL);
 	return EFI_SUCCESS;
 }
