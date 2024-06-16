@@ -2,7 +2,7 @@ cflags = -fno-builtin -fno-stack-protector -nostdinc -Wall -Wextra -I include
 aflags = --64 -msyntax=intel -mmnemonic=intel
 lflags = -s -nostdlib -e UefiMain --subsystem 10 -shared
 efiobj = obj/efi/efi*.o
-sfsobj = obj/snailfs.o
+arobj = obj/*.o
 asmobj = obj/asm/*.o
 ldselect = python ./build/ldselect.py
 asselect = python ./build/asselect.py
@@ -13,8 +13,11 @@ rule as
 rule cc
   command = x86_64-w64-mingw32-gcc -c $cflags $in -o $out
 
-rule ld
-  command = $ldselect $in $efiobj $sfsobj $asmobj $lflags -o $out
+rule ld_boot
+  command = $ldselect $in $efiobj $arobj $asmobj $lflags -o $out
+
+rule ld_scheck
+  command = $ldselect $in $efiobj obj/snailfs.o obj/asm/loadpml4.o $lflags -o $out
 
 build obj/efi/efigvars.o: cc src/efi/efigvars.c
 build obj/efi/eficio.o: cc src/efi/eficio.c
@@ -25,8 +28,9 @@ build obj/asm/enabsce.o: as src/asm/enabsce.s
 build obj/asm/loadgdt.o: as src/asm/loadgdt.s
 build obj/asm/loadpml4.o: as src/asm/loadpml4.s
 build obj/asm/userspace.o: as src/asm/userspace.s
+build obj/gdt.o: cc src/gdt.c
 build obj/snailfs.o: cc src/snailfs.c
-build obj/bootx64.o: cc src/bootx64.c
-build obj/scheck.o: cc src/scheck.c
-build bin/bootx64.efi: ld obj/bootx64.o
-build bin/scheck.efi: ld obj/scheck.o
+build obj/final/bootx64.o: cc src/bootx64.c
+build obj/final/scheck.o: cc src/scheck.c
+build bin/bootx64.efi: ld_boot obj/final/bootx64.o
+build bin/scheck.efi: ld_scheck obj/final/scheck.o
