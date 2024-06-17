@@ -3,6 +3,7 @@
 #include "efidef.h"
 #include "efifpt.h"
 
+/// @brief Memory address for sharing operating system block I/O protocol
 #define OSBI_SHARED_ADDRESS ((EFI_BLOCK_IO_PROTOCOL*)0x0000000002000000)
 
 extern EFI_SYSTEM_TABLE* ST;

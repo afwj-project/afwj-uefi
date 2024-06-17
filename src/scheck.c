@@ -173,6 +173,9 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 		return Status;
 	}
 	gTableHdr = (SNAILFS_TABLE_HEADER*)TableHdrBuffer;
+	gST->ConOut->OutputString(gST->ConOut, L"Sharing OS block I/O...\r\n");
+	EFI_BLOCK_IO_PROTOCOL* sOperatingSystemBlockIo = OSBI_SHARED_ADDRESS;
+	UefiMemCpy(sOperatingSystemBlockIo, gBlockIoProtocol, sizeof(EFI_BLOCK_IO_PROTOCOL));
 	gST->ConOut->OutputString(gST->ConOut, L"Looking for kernel file...\r\n");
 	Status = UefiSnailFileSearch(L"/kernel.bin", KernelFileInfo);
 	if (Status != EFI_SUCCESS) {
