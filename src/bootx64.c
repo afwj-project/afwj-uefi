@@ -1,6 +1,7 @@
 #include "efi/eficio.h"
 #include "efi/efimem.h"
 #include "efi/efiutils.h"
+#include "gdt.h"
 #include "kbinfm.h"
 #include "snailfs.h"
 
@@ -45,6 +46,21 @@ VOID UefiLoadSystemCheck(IN EFI_HANDLE ImageHandle) {
 	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status, L"LoadImage sa5Q2t/ritW7");
 }
 
+EFI_STATUS UefiCheckOsbiSharedAddress(IN EFI_BLOCK_IO_PROTOCOL* sOperatingSystemBlockIo) {
+	UINT8* CheckBuffer = (UINT8*)sOperatingSystemBlockIo;
+	BOOLEAN DataFlag = FALSE;
+	if (sOperatingSystemBlockIo != OSBI_SHARED_ADDRESS) return EFI_INVALID_PARAMETER;
+	for (UINT8 i = 0; i < sizeof(EFI_BLOCK_IO_PROTOCOL); i++) {
+		if (i % 16 == 0) gST->ConOut->OutputString(gST->ConOut, L"\r\n");
+		UefiPrintHexadecimalUnsigned(CheckBuffer[i]);
+		gST->ConOut->OutputString(gST->ConOut, L" ");
+		if (CheckBuffer[i] && !DataFlag) DataFlag = TRUE;
+	}
+	gST->ConOut->OutputString(gST->ConOut, L"\r\n");
+	if (DataFlag) return EFI_SUCCESS;
+	else return EFI_NOT_FOUND;
+}
+
 EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable) {
 	EFI_STATUS Status;
 	EFI_INPUT_KEY ShutdownKey;
@@ -84,59 +100,12 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 	gST->ConOut->OutputString(gST->ConOut, L"PROFIT!\r\nRunning system check application...\r\n");
 	Status = gBS->StartImage(SystemCheckImage, NULL, NULL);
 	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status, L"StartImage IBFivywzWeBZ");
-	Status = gBS->LocateHandleBuffer(ByProtocol, &gBlockIoProtocolGuid, NULL, &HandleCount, &BlockControllerHandles);
-	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status, L"LocateHandleBuffer oFGs2zDOwEu9");
-	for (UINTN HandleIndex = 0; HandleIndex < HandleCount; HandleIndex++) {
-		Status = gBS->HandleProtocol(BlockControllerHandles[HandleIndex], &gBlockIoProtocolGuid, (VOID**)&gBlockIoProtocol);
-		if (Status != EFI_SUCCESS) {
-			UefiErrorPrint(Status, L"HandleProtocol HWxOnP5I4Rki");
-			continue;
-		}
-		if (gBlockIoProtocol->Media->LogicalPartition) continue;
-		GptHeaderBuffer = (UINT8*)UefiMalloc(gBlockIoProtocol->Media->BlockSize);
-		Status = gBlockIoProtocol->ReadBlocks(
-			gBlockIoProtocol, gBlockIoProtocol->Media->MediaId, (EFI_LBA)1,
-			gBlockIoProtocol->Media->BlockSize, GptHeaderBuffer);
-		if (Status != EFI_SUCCESS) {
-			UefiFree(GptHeaderBuffer);
-			UefiErrorPrint(Status, L"ReadBlocks tTmELBt5ii1W");
-			continue;
-		}
-		GptHeader = (EFI_PARTITION_TABLE_HEADER*)GptHeaderBuffer;
-		if (GptHeader->Hdr.Signature != EFI_PTAB_HEADER_ID) {
-			UefiFree(GptHeaderBuffer);
-			continue;
-		}
-		NumberOfEntryBlocks = GptHeader->NumberOfPartitionEntries / 4;
-		for (UINTN EntryBlockIndex = 0; EntryBlockIndex < NumberOfEntryBlocks; EntryBlockIndex++) {
-			PartitionEntryBuffer = (UINT8*)UefiMalloc(gBlockIoProtocol->Media->BlockSize);
-			Status = gBlockIoProtocol->ReadBlocks(
-				gBlockIoProtocol, gBlockIoProtocol->Media->MediaId, (EFI_LBA)(2 + EntryBlockIndex),
-				gBlockIoProtocol->Media->BlockSize, PartitionEntryBuffer);
-			if (Status != EFI_SUCCESS) {
-				UefiFree(PartitionEntryBuffer);
-				UefiErrorPrint(Status, L"ReadBlocks 0yeYNwaiUTEG");
-				continue;
-			}
-			PartitionEntry = (EFI_PARTITION_ENTRY*)PartitionEntryBuffer;
-			for (UINTN EntryDataIndex = 0; EntryDataIndex < 4; EntryDataIndex++) {
-				EntryReadingControl += (UINT64)IsZeroGUID(PartitionEntry[EntryDataIndex].PartitionTypeGUID);
-				EntryReadingControl += (UINT64)(EntryBlockIndex * 4 + EntryDataIndex != 1) << 1;
-				EntryReadingControl += (UINT64)FoundFlag << 2;
-				if (EntryReadingControl > 0) {
-					EntryReadingControl = 0;
-					continue;
-				}
-				UefiMemCpy(gOperatingSystemEntry, &PartitionEntry[EntryDataIndex], sizeof(EFI_PARTITION_ENTRY));
-			}
-			UefiFree(PartitionEntryBuffer);
-		}
-		UefiFree(GptHeaderBuffer);
-		if (!FoundFlag) {
-			gOperatingSystemBlockIo = gBlockIoProtocol;
-			FoundFlag = TRUE;
-		}
-	}
+	EFI_BLOCK_IO_PROTOCOL* sOperatingSystemBlockIo = OSBI_SHARED_ADDRESS;
+	gST->ConOut->OutputString(gST->ConOut, L"Checking shared OS block I/O...\r\n");
+	Status = UefiCheckOsbiSharedAddress(sOperatingSystemBlockIo);
+	if (Status != EFI_SUCCESS) UefiErrorShutdown(Status, L"UefiCheckOsbiSharedAddress KOglKHh13wzf");
+	// Unused codes is oFGs2zDOwEu9 HWxOnP5I4Rki tTmELBt5ii1W 0yeYNwaiUTEG
+	SetupGlobalDescriptorTable();
 	EFI_MEMORY_DESCRIPTOR* DescriptorEntry = NULL;
 	MemoryMap.MemoryMapSize = EFI_MEMORY_MAP_SIZE;
 	gBS->GetMemoryMap(
