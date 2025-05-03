@@ -114,6 +114,57 @@ EFI_STATUS UefiGetZeroSectorIndex(OUT UINT64* IndexRef) {
 	return EFI_NOT_FOUND;
 }
 
+UINTN UefiGetSnailFilePartAddress(IN SNAILFS_FILE* Stream) {
+	UINTN PartAddress = Stream->FileAddress;
+	UINTN NodeAddress = Stream->FirstNodeAddress;
+	UINTN CurrentIdx = Stream->CurrentNodeIdx;
+	UINT8* NodeInformationBuffer = (UINT8*)UefiMalloc(sizeof(LINK_SECTION));
+	for (UINTN i = 0; i < CurrentIdx; i++) {
+		gOperatingSystemBlockIo->ReadBlocks(
+			gOperatingSystemBlockIo, gOperatingSystemBlockIo->Media->MediaId,
+			NodeAddress, sizeof(BON_SECTION), NodeInformationBuffer
+		);
+		PartAddress -= 512 * ((BON_SECTION*)NodeInformationBuffer)->SectorCount;
+		NodeAddress += ((BON_SECTION*)NodeInformationBuffer)->SectorCount;
+		gOperatingSystemBlockIo->ReadBlocks(
+			gOperatingSystemBlockIo, gOperatingSystemBlockIo->Media->MediaId,
+			NodeAddress, sizeof(EON_SECTION), NodeInformationBuffer
+		);
+		NodeAddress = ((EON_SECTION*)NodeInformationBuffer)->NextAddress;
+	}
+	return PartAddress;
+}
+
+UINTN UefiGetSnailFilePartSize(IN SNAILFS_FILE* Stream) {
+	UINTN NodeAddress = Stream->CurrentNodeAddress;
+	UINTN CurrentIdx = Stream->CurrentNodeIdx;
+	UINT8* NodeInformationBuffer = (UINT8*)UefiMalloc(sizeof(LINK_SECTION));
+	gOperatingSystemBlockIo->ReadBlocks(
+		gOperatingSystemBlockIo, gOperatingSystemBlockIo->Media->MediaId,
+		NodeAddress - sizeof(BON_SECTION) / 512, sizeof(BON_SECTION), NodeInformationBuffer
+	);
+	return 512 * ((BON_SECTION*)NodeInformationBuffer)->SectorCount;
+}
+
+EFI_STATUS UefiGetDataTable(OUT SNAILFS_DATA_TABLE AllTableDst) {
+	UINT64 SectorsPerTuple = sizeof(SNAILFS_DATA_TUPLE) / gOperatingSystemBlockIo->Media->BlockSize;
+	UINT8* DataTableBuffer = (UINT8*)UefiMalloc(sizeof(SNAILFS_DATA_TUPLE));
+	UINTN j = 0;
+	for (UINTN i = 0; i < gTableHdr->MaximumTableLength; i++) {
+		gOperatingSystemBlockIo->ReadBlocks(
+			gOperatingSystemBlockIo, gOperatingSystemBlockIo->Media->MediaId,
+			gOperatingSystemEntry->StartingLBA + 2 + SectorsPerTuple * i,
+			sizeof(SNAILFS_DATA_TUPLE), DataTableBuffer
+		);
+		if (!IsZeroSpace(DataTableBuffer, sizeof(SNAILFS_DATA_TUPLE))) {
+			UefiMemCpy(AllTableDst + j, DataTableBuffer, sizeof(SNAILFS_DATA_TUPLE));
+			j++;
+		}
+	}
+	if (j != gTableHdr->CurrentTableLength) return EFI_LOAD_ERROR;
+	return EFI_SUCCESS;
+}
+
 EFI_STATUS UefiSnailFileSearch(IN CONST CHAR16* FilePath, OUT SNAILFS_DATA_TABLE SelectedTable) {
 	SNAILFS_DATA_TABLE DataTable = NULL;
 	UINT64 SectorsPerTuple = sizeof(SNAILFS_DATA_TUPLE) / gOperatingSystemBlockIo->Media->BlockSize;
@@ -122,7 +173,8 @@ EFI_STATUS UefiSnailFileSearch(IN CONST CHAR16* FilePath, OUT SNAILFS_DATA_TABLE
 		gOperatingSystemBlockIo->ReadBlocks(
 			gOperatingSystemBlockIo, gOperatingSystemBlockIo->Media->MediaId,
 			gOperatingSystemEntry->StartingLBA + 2 + SectorsPerTuple * i,
-			sizeof(SNAILFS_DATA_TUPLE), DataTableBuffer);
+			sizeof(SNAILFS_DATA_TUPLE), DataTableBuffer
+		);
 		DataTable = (SNAILFS_DATA_TABLE)DataTableBuffer;
 		gST->ConOut->OutputString(gST->ConOut, L"\r");
 		UefiPrintProgressBar(32 * (i + 1) / gTableHdr->MaximumTableLength);
@@ -139,19 +191,20 @@ EFI_STATUS UefiSnailFileSearch(IN CONST CHAR16* FilePath, OUT SNAILFS_DATA_TABLE
 }
 
 SNAILFS_FILE* UefiSnailFileOpen(IN CONST CHAR16* FilePath, IN CHAR8 OpenType, OUT EFI_STATUS* StatusRef) {
-	SNAILFS_FILE* Stream = NULL;
+	SNAILFS_FILE* Stream = (SNAILFS_FILE*)UefiMalloc(sizeof(SNAILFS_FILE));
 	SNAILFS_DATA_TABLE DataTable = (SNAILFS_DATA_TABLE)UefiMalloc(sizeof(SNAILFS_DATA_TUPLE));
+	UINT8* NodeInformationBuffer = (UINT8*)UefiMalloc(sizeof(LINK_SECTION));
 	*StatusRef = UefiSnailFileSearch(FilePath, DataTable);
-	Stream = (SNAILFS_FILE*)UefiMalloc(sizeof(SNAILFS_FILE));
-	UefiMemCpy((VOID*)Stream->FilePath, (VOID*)FilePath, sizeof(CHAR16) * 1024);
+	UefiMemCpy((VOID*)Stream->FilePath, (VOID*)FilePath, sizeof(CHAR16) * 512);
 	if (OpenType == 'w') {
 		Stream->FileDescriptor = NextFileDescriptor++;
 		Stream->FileAddress = 0;
 		Stream->FileSize = 0;
 		Stream->FileControl = SNAILFS_FILE_WRITE;
 		Stream->WriteBuffer = (UINT8*)UefiMalloc(512);
-		if (*StatusRef != EFI_NOT_FOUND) UefiMemCpy(Stream->PartAddresses, DataTable->PartAddresses, sizeof(FILE_PART_INFO) * 64);
-		Stream->CurrentPID = 0;
+		Stream->FirstNodeAddress = DataTable->FirstNodeAddress;
+		Stream->CurrentNodeIdx = 0;
+		Stream->CurrentNodeAddress = DataTable->FirstNodeAddress + sizeof(BON_SECTION) / 512;
 		Stream->ReadBuffer = NULL;
 		goto END_OF_FUNCTION;
 	} else if (OpenType == 'r') {
@@ -160,13 +213,19 @@ SNAILFS_FILE* UefiSnailFileOpen(IN CONST CHAR16* FilePath, IN CHAR8 OpenType, OU
 		Stream->FileAddress = 0;
 		Stream->FileSize = DataTable->FileSize;
 		Stream->FileControl = SNAILFS_FILE_READ;
-		UefiMemCpy(Stream->PartAddresses, DataTable->PartAddresses, sizeof(FILE_PART_INFO) * 64);
-		Stream->CurrentPID = 0;
+		Stream->FirstNodeAddress = DataTable->FirstNodeAddress;
+		Stream->CurrentNodeIdx = 0;
+		Stream->CurrentNodeAddress = DataTable->FirstNodeAddress + sizeof(BON_SECTION) / 512;
 		Stream->WriteBuffer = NULL;
-		Stream->ReadBuffer = (UINT8*)UefiMalloc(512 * DataTable->PartAddresses[0].SectorCount);
 		gOperatingSystemBlockIo->ReadBlocks(
-			gOperatingSystemBlockIo, gOperatingSystemBlockIo->Media->MediaId, DataTable->PartAddresses[0].StartingLBA,
-			512 * DataTable->PartAddresses[0].SectorCount, Stream->ReadBuffer);
+			gOperatingSystemBlockIo, gOperatingSystemBlockIo->Media->MediaId, Stream->FirstNodeAddress,
+			sizeof(BON_SECTION), NodeInformationBuffer
+		);
+		Stream->ReadBuffer = (UINT8*)UefiMalloc(512 * ((BON_SECTION*)NodeInformationBuffer)->SectorCount);
+		gOperatingSystemBlockIo->ReadBlocks(
+			gOperatingSystemBlockIo, gOperatingSystemBlockIo->Media->MediaId, Stream->CurrentNodeAddress,
+			512 * ((BON_SECTION*)NodeInformationBuffer)->SectorCount, Stream->ReadBuffer
+		);
 		goto END_OF_FUNCTION;
 	} else {
 		*StatusRef = EFI_INVALID_PARAMETER;
@@ -182,8 +241,13 @@ EFI_STATUS UefiSnailFileClose(IN SNAILFS_FILE* Stream) {
 	SNAILFS_DATA_TABLE DataTable = (SNAILFS_DATA_TABLE)UefiMalloc(sizeof(SNAILFS_DATA_TUPLE));
 	EFI_STATUS Status = UefiSnailFileSearch(Stream->FilePath, DataTable);
 	if (Stream->FileControl == SNAILFS_FILE_WRITE && Status == EFI_NOT_FOUND) {
+		SNAILFS_DATA_TUPLE Tuple = {0,};
+		UefiMemCpy(&Tuple.FilePath, Stream->FilePath, sizeof(CHAR16) * 1024);
+		Tuple.FileSize = Stream->FileSize;
+		Tuple.FileAccess = 0x01B6;
 		// TODO: add file creation code
 	} else if (Stream->FileControl == SNAILFS_FILE_WRITE && Status == EFI_SUCCESS) {
+		DataTable->FileSize = Stream->FileSize;
 		// TODO: add file overwriting code
 	}
 	UefiFree(Stream);
@@ -195,24 +259,30 @@ UINTN UefiSnailFileRead(OUT VOID* DstBuffer, IN UINTN PartSize, IN OUT SNAILFS_F
 	if (Stream->FileAddress + PartSize > Stream->FileSize) return 0;
 	EFI_STATUS Status;
 	UINT8* DstBufferTarget = (UINT8*)DstBuffer;
-	UINT64 StartOfPart = 0;
-	for (UINTN i = 0; i < Stream->CurrentPID; i++) StartOfPart += 512 * Stream->PartAddresses[i].SectorCount;
-	UINT64 EndOfPart = 512 * Stream->PartAddresses[Stream->CurrentPID].SectorCount;
-	UINT64 CurrentPartAddress = Stream->FileAddress - StartOfPart;
+	UINT8* NodeInformationBuffer = (UINT8*)UefiMalloc(sizeof(LINK_SECTION));
+	UINT64 CurrentPartAddress = UefiGetSnailFilePartAddress(Stream);
+	UINT64 CurrentPartSize = UefiGetSnailFilePartSize(Stream);
 	UINT8* SrcBufferTarget = &Stream->ReadBuffer[CurrentPartAddress];
 	for (UINTN i = 0; i < PartSize; i++) {
 		*DstBufferTarget++ = *SrcBufferTarget++;
 		Stream->FileAddress++;
 		CurrentPartAddress++;
-		if (CurrentPartAddress == EndOfPart) {
+		if (CurrentPartAddress == CurrentPartSize) {
 			UefiFree(Stream->ReadBuffer);
-			Stream->CurrentPID++;
-			Stream->ReadBuffer = (UINT8*)UefiMalloc(512 * Stream->PartAddresses[Stream->CurrentPID].SectorCount);
 			gOperatingSystemBlockIo->ReadBlocks(
-				gOperatingSystemBlockIo, gOperatingSystemBlockIo->Media->MediaId, Stream->PartAddresses[0].StartingLBA,
-				512 * Stream->PartAddresses[0].SectorCount, Stream->ReadBuffer);
+				gOperatingSystemBlockIo, gOperatingSystemBlockIo->Media->MediaId,
+				Stream->CurrentNodeAddress + CurrentPartSize / 512,
+				sizeof(EON_SECTION), NodeInformationBuffer
+			);
+			Stream->CurrentNodeIdx++;
+			Stream->CurrentNodeAddress = ((EON_SECTION*)NodeInformationBuffer)->NextAddress + sizeof(BON_SECTION) / 512;
 			CurrentPartAddress = 0;
-			EndOfPart = 512 * Stream->PartAddresses[Stream->CurrentPID].SectorCount;
+			CurrentPartSize = UefiGetSnailFilePartSize(Stream);
+			Stream->ReadBuffer = (UINT8*)UefiMalloc(CurrentPartSize);
+			gOperatingSystemBlockIo->ReadBlocks(
+				gOperatingSystemBlockIo, gOperatingSystemBlockIo->Media->MediaId,
+				Stream->CurrentNodeAddress, CurrentPartSize, Stream->ReadBuffer
+			);
 		}
 	}
 	return PartSize;

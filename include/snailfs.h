@@ -1,6 +1,6 @@
 #pragma once
 
-#include "efi/efibase.h"
+#include "efi/efifpt.h"
 
 #define SNAILFS_0_10_REVISION ((0 << 16) | (10))
 #define SNAILFS_SPECIFICATION_VERSION SNAILFS_0_10_REVISION
@@ -27,22 +27,51 @@ typedef struct {
 	UINT8 Reserved[436];
 } SNAILFS_TABLE_HEADER;
 
+/// @brief Begin of node
 typedef struct {
-	EFI_LBA StartingLBA;
-	EFI_LBA SectorCount;
-} FILE_PART_INFO;
+	EFI_LBA PreviousAddress; ///< Must be 0xFFFFFFFFFFFFFFFF if it is the first node.
+	CHAR16 FilePath[512];
+	UINT64 SectorCount;
+	UINT8 Reserved[1008];
+} BON_SECTION;
+
+/// @brief End of node
+typedef struct {
+	EFI_LBA NextAddress; ///< Must be 0xFFFFFFFFFFFFFFFF if it is the last node.
+	CHAR16 FilePath[512];
+	UINT8 Reserved[1016];
+} EON_SECTION;
+
+/// @brief Link of node
+typedef union {
+	BON_SECTION PreviousLink;
+	EON_SECTION NextLink;
+} LINK_SECTION;
 
 typedef struct {
-	CHAR16 FilePath[1024];
-	FILE_PART_INFO PartAddresses[64];
+	CHAR16 FilePath[512];
+	EFI_LBA FirstNodeAddress;
 	UINT64 FileSize;
 	UINT64 FileAccess;
-	UINT8 Reserved[1008];
+	UINT8 Reserved[1000];
 } SNAILFS_DATA_TUPLE, *SNAILFS_DATA_TABLE;
 
 typedef struct {
 	UINT8 SectorBuffer[512];
 } SNAILFS_SECTOR;
+
+typedef struct {
+	UINT64 FileDescriptor;
+	CHAR16 FilePath[512];
+	UINT64 FileAddress;
+	UINT64 FileSize;
+	UINT64 FileControl;
+	EFI_LBA FirstNodeAddress;
+	UINT64 CurrentNodeIdx;
+	EFI_LBA CurrentNodeAddress;
+	UINT8* ReadBuffer;
+	UINT8* WriteBuffer;
+} SNAILFS_FILE;
 #pragma pack(pop)
 
 extern SNAILFS_BOOT_RECORD* BootRecord;
@@ -60,21 +89,10 @@ VOID UefiCheckSnailTableSize(
 	IN EFI_PARTITION_ENTRY* PartitionEntry,
 	OUT EFI_STATUS* StatusRef);
 
-typedef struct {
-	UINT64 FileDescriptor;
-	CHAR16 FilePath[1024];
-	UINT64 FileAddress;
-	UINT64 FileSize;
-	UINT64 FileControl;
-	UINT64 CurrentPID;
-	FILE_PART_INFO PartAddresses[64];
-	UINT8* ReadBuffer;
-	UINT8* WriteBuffer;
-} SNAILFS_FILE;
-
 EFI_STATUS UefiGetSnailZeroIndex(OUT UINT64* IndexRef);
 EFI_STATUS UefiGetZeroSectorIndex(OUT UINT64* IndexRef);
 
+EFI_STATUS UefiGetDataTable(OUT SNAILFS_DATA_TABLE AllTableDst);
 EFI_STATUS UefiSnailFileSearch(IN CONST CHAR16* FilePath, OUT SNAILFS_DATA_TABLE SelectedTable);
 SNAILFS_FILE* UefiSnailFileOpen(IN CONST CHAR16* FilePath, IN CHAR8 OpenType, OUT EFI_STATUS* StatusRef);
 EFI_STATUS UefiSnailFileClose(IN SNAILFS_FILE* Stream);
