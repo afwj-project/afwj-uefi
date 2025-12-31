@@ -1,6 +1,7 @@
 #include "efi/eficio.h"
 #include "efi/efimem.h"
 #include "efi/efiutils.h"
+#include "kbinfm.h"
 #include "snailfs.h"
 
 VOID ___chkstk_ms(){
@@ -48,6 +49,7 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 	CHAR16* BlockPathText;
 	UINTN NumberOfEntryBlocks;
 	BOOLEAN FoundFlag = FALSE;
+	FOUND_KERNEL_INFO KernelInfo;
 	SNAILFS_DATA_TABLE KernelFileInfo = (SNAILFS_DATA_TABLE)UefiMalloc(sizeof(SNAILFS_DATA_TUPLE));
 	for (UINTN HandleIndex = 0; HandleIndex < HandleCount; HandleIndex++) {
 		Status = gBS->HandleProtocol(BlockControllerHandles[HandleIndex], &gBlockIoProtocolGuid, (VOID**)&gBlockIoProtocol);
@@ -120,6 +122,7 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 		UefiFree(GptHeaderBuffer);
 		if (!FoundFlag) {
 			gOperatingSystemBlockIo = gBlockIoProtocol;
+			KernelInfo.FoundHandleIndex = HandleIndex;
 			FoundFlag = TRUE;
 		}
 	}
@@ -173,9 +176,6 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 		return Status;
 	}
 	gTableHdr = (SNAILFS_TABLE_HEADER*)TableHdrBuffer;
-	gST->ConOut->OutputString(gST->ConOut, L"Sharing OS block I/O...\r\n");
-	EFI_BLOCK_IO_PROTOCOL* sOperatingSystemBlockIo = OSBI_SHARED_ADDRESS;
-	UefiMemCpy(sOperatingSystemBlockIo, gBlockIoProtocol, sizeof(EFI_BLOCK_IO_PROTOCOL));
 	gST->ConOut->OutputString(gST->ConOut, L"Looking for kernel file...\r\n");
 	Status = UefiSnailFileSearch(L"/kernel.bin", KernelFileInfo);
 	if (Status != EFI_SUCCESS) {
@@ -185,9 +185,15 @@ EFI_STATUS UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 		gST->ConOut->OutputString(gST->ConOut, L"FAILED: kernel file not found\r\n");
 		return Status;
 	}
-	gST->ConOut->OutputString(gST->ConOut, L"PROFIT: kernel file found\r\n");
+	gST->ConOut->OutputString(gST->ConOut, L"\r\nPROFIT: kernel file found\r\n");
+	SNAILFS_FILE* KernelFile = UefiSnailFileOpen(L"/kernel.bin", 'r', &Status);
+	if (KernelFile == NULL || Status != EFI_SUCCESS) UefiErrorShutdown(Status, L"UefiSnailFileOpen 0yeYNwaiUTEG");
+	gST->ConOut->OutputString(gST->ConOut, L"Reading kernel file...\r\n");
+	UefiSnailFileRead(&KernelInfo.KernelBuffer, KernelFile->FileSize, KernelFile);
+	UefiSnailFileClose(KernelFile);
+	gST->ConOut->OutputString(gST->ConOut, L"Sharing OS kernel file...\r\n");
 	UefiFree(gOperatingSystemEntry);
 	UefiFree(BootRecordBuffer);
 	UefiFree(TableHdrBuffer);
-	return EFI_SUCCESS;
+	return gBS->Exit(ImageHandle, UD_EFI_FOUND, sizeof(FOUND_KERNEL_INFO), (CHAR16*)&KernelInfo);
 }

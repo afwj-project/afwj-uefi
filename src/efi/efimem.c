@@ -14,6 +14,9 @@ VOID UefiMemInit() {
 	}
 }
 
+/// @brief Memory allocation for UEFI
+/// @param Size Memory size
+/// @return Memory address
 VOID* UefiMalloc(IN UINTN Size) {
 	VOID* Pool;
 	EFI_STATUS Status = gBS->AllocatePool(EfiLoaderData, Size, &Pool);
@@ -28,6 +31,10 @@ VOID* UefiMalloc(IN UINTN Size) {
 	return Pool;
 }
 
+/// @brief Memory re-allocation for UEFI
+/// @param Pool Old memory address
+/// @param Size New memory size
+/// @return New memory address
 EFI_STATUS UefiRealloc(IN OUT VOID** Pool, IN UINTN Size) {
 	VOID* Temp = *Pool;
 	EFI_STATUS Status = gBS->AllocatePool(EfiLoaderData, Size, Pool);
@@ -56,6 +63,9 @@ UINT64 UefiGetMemSize(IN VOID* Pool, OUT EFI_STATUS* StatusRef) {
 	return 0;
 }
 
+/// @brief Memory free for UEFI
+/// @param Pool Memory address
+/// @return Nothing
 VOID UefiFree(IN VOID* Pool) {
 	for (UINTN i = 0; i < 2048; i++) {
 		if (PoolTable[i].Ptr == Pool) {
@@ -67,6 +77,8 @@ VOID UefiFree(IN VOID* Pool) {
 	gBS->FreePool(Pool);
 }
 
+/// @brief Memory allocation for kernel
+/// @return Memory address
 VOID* UefiAllocPage() {
 	VOID* Page = (VOID*)NextAllocPage;
 	NextAllocPage += 4096;
