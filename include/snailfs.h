@@ -56,8 +56,9 @@ typedef struct {
 	UINT8 Reserved[1000];
 } SNAILFS_DATA_TUPLE, *SNAILFS_DATA_TABLE;
 
-typedef struct {
+typedef union {
 	UINT8 SectorBuffer[512];
+	SNAILFS_BOOT_RECORD BootRecord;
 } SNAILFS_SECTOR;
 
 typedef struct {

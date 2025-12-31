@@ -11,5 +11,8 @@
 #define EFI_NO_MEDIA ((EFI_STATUS)(MAX_BIT | 0xC))
 #define EFI_NOT_FOUND ((EFI_STATUS)(MAX_BIT | 0xE))
 
+#define UD_MAX_BIT 0xD000000000000000
+#define UD_EFI_FOUND ((EFI_STATUS)(UD_MAX_BIT | 0x1))
+
 VOID UefiErrorPrint(IN EFI_STATUS ErrorCode, IN CHAR16* ErrorSymbol);
 VOID UefiErrorShutdown(IN EFI_STATUS ErrorCode, IN CHAR16* ErrorSymbol);
