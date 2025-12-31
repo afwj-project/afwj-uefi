@@ -2,8 +2,8 @@
 
 #include "efigvars.h"
 
-#define UefiMemCpy gBS->CopyMem // ALIAS: Memory Copy Function
-#define UefiMemSet gBS->SetMem // ALIAS: Memory Set Function
+#define UefiMemCpy gBS->CopyMem ///< Memory Copy Function
+#define UefiMemSet gBS->SetMem ///< Memory Set Function
 
 #define PAGE_BIT_P (1 << 0)
 #define PAGE_BIT_RW (1 << 1)

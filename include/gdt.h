@@ -51,4 +51,5 @@ typedef struct {
 extern GLOBAL_DESCRIPTOR_TABLE GDT;
 extern TASK_STATE_SEGMENT TSS;
 extern VOID LoadGdt(TABLE_POINTER* GdtPtr);
+extern VOID EnableSce();
 VOID SetupGlobalDescriptorTable();

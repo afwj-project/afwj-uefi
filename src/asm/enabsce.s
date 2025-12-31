@@ -1,4 +1,5 @@
 .intel_syntax noprefix
+.global EnableSce
 EnableSce:
 	mov rcx, 0xC0000080
 	rdmsr
